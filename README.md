@@ -13,13 +13,13 @@ All your data is stored in systems you own — locally on your machine inside a 
 
 ---
 
-## Current status: Phase 1 complete
+## Current status: Phase 2 complete
 
 | Phase | Status | What it covers |
 |---|---|---|
 | Phase 1 — Foundation + Core Loop | ✅ Complete | Email scanning (rule-based), manual task entry, task completion, daily briefing, health check |
-| Phase 2 — Intelligence + Recurring | 🟡 In progress | Smart LLM classification, recurring tasks, domain onboarding wizard |
-| Phase 3 — Meeting Notes + Voice | Not started | Meeting note extraction, Siri Shortcuts |
+| Phase 2 — Intelligence + Recurring | ✅ Complete | Tier 2/3 LLM classification, recurring task engine, `/onboard` wizard, `/add-recurring`, daily maintenance task |
+| Phase 3 — Meeting Notes + Voice | 🟡 In progress | Meeting note extraction, Siri Shortcuts |
 | Phase 4 — Weekly Review + Polish | Not started | Weekly review, advanced filtering, error handling |
 | Phase 5 — Marketplace Prep | Not started | Config templates, packaged plugin |
 
@@ -114,6 +114,8 @@ Once configured, MLEA runs automatically. The scheduled tasks handle email scann
 | `/done <task name>` | Mark a task complete (fuzzy-matched against open issues) |
 | `/my-day` | Get your daily briefing |
 | `/mlea-status` | Health check — last scan times, counts, connector status |
+| `/onboard <domain>` | Bootstrap a new life domain with recurring tasks, tags, and email rules *(Phase 2)* |
+| `/add-recurring <description>` | Add a single recurring task *(Phase 2)* |
 
 ### How tasks end up in GitHub Projects
 
@@ -136,8 +138,9 @@ You can filter and sort the board by any of these. You can also just drag tasks 
 MLEA uses **incremental scanning** — it never reads your entire inbox. Each scan only looks at emails that arrived since the last run, using a high-water timestamp stored in `task-data/mlea-state.json`.
 
 Classification is **rule-first, LLM-second**:
-- ~70% of emails are classified by regex rules (fast, free, auditable)
-- The remaining ~30% use Haiku for lightweight LLM classification *(Phase 2)*
+- ~70% of emails are classified by regex rules (Tier 1 — fast, free, auditable)
+- ~15% are classified by structural signals (Tier 2 — calendar invites, VIP senders, date in subject)
+- The remaining ~15% use Haiku for lightweight LLM classification (Tier 3)
 
 Email bodies are never stored. MLEA reads subject, sender, date, and a short snippet (~200 chars) only.
 
@@ -148,7 +151,7 @@ Email bodies are never stored. MLEA reads subject, sender, date, and a short sni
 ## Privacy
 
 - Email bodies are never stored in state
-- LLM classification sees at most the first 500 characters of an email body *(Phase 2)*
+- LLM classification sees at most the first 500 characters of an email body (Tier 3 only)
 - All state files stay on your local machine (`task-data/`)
 - Nothing is transmitted to third parties beyond what the Gmail and GitHub API calls require
 - OAuth for Gmail uses `gmail.readonly` scope — MLEA has no write access to your email
