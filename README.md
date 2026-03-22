@@ -42,7 +42,28 @@ Before you can use MLEA, you need:
 
 ## Installation
 
-### Step 1 — Connect Gmail (read-only)
+### Step 1 — Clone this repo
+
+```bash
+git clone https://github.com/queen-of-code/executive-assistant
+cd executive-assistant
+```
+
+This repo directory will become your MLEA workspace — all state files live here (in `task-data/`, which is `.gitignore`'d).
+
+### Step 2 — Create a Cowork Project pointed at this folder
+
+MLEA relies on state files (`task-data/mlea-state.json`, etc.) persisting between Cowork sessions. This requires running inside a **Cowork Project** — standalone Cowork sessions don't reliably persist local file writes.
+
+1. Open Claude Desktop → switch to the **Cowork** tab
+2. In the left sidebar, click **Projects** → **+**
+3. Choose **Use an existing folder**
+4. Select the `executive-assistant/` directory you cloned in Step 1
+5. Name it something like "MLEA" and click **Create**
+
+All MLEA tasks — setup, scans, briefings — should be run from inside this project.
+
+### Step 3 — Connect Gmail (read-only)
 
 MLEA reads your email but **never writes to it**. The Gmail connector is scoped to `gmail.readonly` — it cannot send, archive, delete, or modify any email. See [`CONNECTORS.md`](CONNECTORS.md) for the full list of what is and isn't accessed.
 
@@ -53,7 +74,7 @@ MLEA reads your email but **never writes to it**. The Gmail connector is scoped 
 
 Repeat for each Gmail account you want MLEA to monitor.
 
-### Step 2 — Connect GitHub
+### Step 4 — Connect GitHub
 
 1. Open Claude Desktop → **Settings** → **Integrations**
 2. Click **Connect GitHub**
@@ -65,25 +86,17 @@ export GITHUB_TOKEN=ghp_your_token_here
 ```
 The token needs `repo` scope (to create and read issues).
 
-### Step 3 — Install MLEA as a Cowork plugin
+### Step 5 — Install MLEA as a Cowork plugin
 
-In Claude Desktop, open Cowork and run:
+1. In Claude Desktop → **Cowork** tab → click **Customize** in the left sidebar
+2. Click **Browse plugins**
+3. Click **Upload a custom plugin file** and select the `executive-assistant/` directory
 
-```
-/install-plugin https://github.com/queen-of-code/executive-assistant
-```
+Or, if Cowork supports loading from a local path directly, point it at the cloned directory.
 
-Or clone and load locally:
+### Step 6 — Run the setup wizard
 
-```bash
-git clone https://github.com/queen-of-code/executive-assistant
-```
-
-Then in Cowork: **Settings** → **Plugins** → **Load from folder** → select the cloned directory.
-
-### Step 4 — Run the setup wizard
-
-In Cowork, run:
+Inside your MLEA Cowork Project, run:
 
 ```
 /configure-mlea
@@ -93,15 +106,28 @@ This will ask you for:
 - Your name and common name variants (used for meeting note matching in Phase 3)
 - The Gmail address(es) to scan
 - Your GitHub username, repo name, and Projects board number
-- Your timezone and briefing schedule preferences
 
-It writes `task-data/mlea-config.json` (which is `.gitignore`d — your personal config never leaves your machine) and creates three scheduled Cowork tasks.
+It writes `task-data/mlea-config.json` (`.gitignore`'d — never leaves your machine).
+
+### Step 7 — Set up scheduled tasks
+
+Cowork's scheduler doesn't support cron — it uses plain-language cadences. You need to create three tasks manually inside your MLEA project.
+
+In your MLEA Cowork Project, click **Scheduled** in the sidebar → **+ New task** for each:
+
+| Task | Cadence | Prompt |
+|---|---|---|
+| MLEA Email Scan | Daily (or Hourly for more frequent scanning) | `Run the MLEA email scan using the email-scanner skill. Read config from task-data/mlea-config.json.` |
+| MLEA Daily Maintenance | Daily | `Run the MLEA daily maintenance task. Check for closed recurring issues, approaching due dates, and overdue items.` |
+| MLEA Daily Briefing | On weekdays *(optional — you can also just run `/my-day` manually)* | `Run /my-day to generate my daily task briefing.` |
+
+> **Note on scan frequency:** Cowork offers hourly or daily as the closest options to the ideal "a few times a day." Hourly is more responsive but uses more of your usage quota. Daily is conservative. Start with daily and adjust.
 
 ---
 
 ## Usage
 
-Once configured, MLEA runs automatically. The scheduled tasks handle email scanning (4×/day), daily maintenance (6am), and your morning briefing (7am weekdays).
+Once configured, MLEA's scheduled tasks handle email scanning, daily maintenance, and your morning briefing automatically. You can also trigger anything manually.
 
 ### Available commands
 
@@ -114,12 +140,12 @@ Once configured, MLEA runs automatically. The scheduled tasks handle email scann
 | `/done <task name>` | Mark a task complete (fuzzy-matched against open issues) |
 | `/my-day` | Get your daily briefing |
 | `/mlea-status` | Health check — last scan times, counts, connector status |
-| `/onboard <domain>` | Bootstrap a new life domain with recurring tasks, tags, and email rules *(Phase 2)* |
-| `/add-recurring <description>` | Add a single recurring task *(Phase 2)* |
+| `/onboard <domain>` | Bootstrap a new life domain with recurring tasks, tags, and email rules |
+| `/add-recurring <description>` | Add a single recurring task |
 
 ### How tasks end up in GitHub Projects
 
-Every task — whether from email, a manual `/add-task`, or (Phase 2) a recurring schedule — becomes a GitHub Issue on your configured board. Labels carry multi-dimensional tags:
+Every task — whether from email, a manual `/add-task`, or a recurring schedule — becomes a GitHub Issue on your configured board. Labels carry multi-dimensional tags:
 
 | Tag dimension | Examples |
 |---|---|
@@ -127,7 +153,7 @@ Every task — whether from email, a manual `/add-task`, or (Phase 2) a recurrin
 | `type/` | `type/bill`, `type/action`, `type/meeting` |
 | `urgency/` | `urgency/critical`, `urgency/high`, `urgency/medium` |
 | `time/` | `time/has-due-date`, `time/overdue`, `time/recurring` |
-| `source/` | `source/email`, `source/manual` |
+| `source/` | `source/email`, `source/manual`, `source/recurring` |
 
 You can filter and sort the board by any of these. You can also just drag tasks between columns like any normal GitHub Projects board.
 
@@ -142,16 +168,16 @@ Classification is **rule-first, LLM-second**:
 - ~15% are classified by structural signals (Tier 2 — calendar invites, VIP senders, date in subject)
 - The remaining ~15% use Haiku for lightweight LLM classification (Tier 3)
 
-Email bodies are never stored. MLEA reads subject, sender, date, and a short snippet (~200 chars) only.
+Email bodies are never stored. MLEA reads subject, sender, date, and a short snippet only.
 
-**If your laptop is closed**, scans are missed but nothing is lost. When Claude Desktop reopens, a catch-up run fetches everything since the last successful scan using the stored timestamp.
+**If your laptop is closed**, scans are missed but nothing is lost. When Claude Desktop reopens, Cowork reruns the skipped task automatically. Because MLEA uses `lastScanTimestamp`, the catch-up run fetches everything since the last successful scan in one batch.
 
 ---
 
 ## Privacy
 
 - Email bodies are never stored in state
-- LLM classification sees at most the first 500 characters of an email body (Tier 3 only)
+- LLM classification sees at most the first 500 characters of an email snippet (Tier 3 only)
 - All state files stay on your local machine (`task-data/`)
 - Nothing is transmitted to third parties beyond what the Gmail and GitHub API calls require
 - OAuth for Gmail uses `gmail.readonly` scope — MLEA has no write access to your email
@@ -174,7 +200,10 @@ See [`CONNECTORS.md`](CONNECTORS.md) for the full breakdown of what each connect
 │   ├── add-task.md
 │   ├── done.md
 │   ├── my-day.md
-│   └── mlea-status.md
+│   ├── mlea-status.md
+│   ├── onboard.md
+│   ├── add-recurring.md
+│   └── daily-maintenance.md
 │
 ├── lib/                         TypeScript guardrail code (no LLM)
 │   ├── types.ts                 All core interfaces
@@ -182,13 +211,15 @@ See [`CONNECTORS.md`](CONNECTORS.md) for the full breakdown of what each connect
 │   ├── state.ts                 Atomic JSON state read/write
 │   ├── tag-engine.ts            Tag registry management
 │   ├── github-adapter.ts        GitHub Issues + Projects API
-│   ├── classify.ts              Tier 1 rule-based classifier
+│   ├── classify.ts              Tier 1 & 2 classifier + Tier 3 prompt builder
 │   ├── dedup.ts                 Email dedup (two-layer)
-│   └── fuzzy-match.ts           Fuzzy task title matching for /done
+│   ├── fuzzy-match.ts           Fuzzy task title matching for /done
+│   └── recurring.ts             Recurring task scheduler
 │
 ├── skills/                      Cowork skill definitions
 │   ├── email-scanner/SKILL.md
-│   └── task-manager/SKILL.md
+│   ├── task-manager/SKILL.md
+│   └── onboard-wizard/SKILL.md
 │
 └── task-data/                   Runtime state (local only, .gitignore'd)
     ├── mlea-config.template.json  Starter template — copy to mlea-config.json
