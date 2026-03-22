@@ -9,7 +9,7 @@ You interact with it through three interfaces:
 - **GitHub Projects** (visual board) — where all tasks live, accessible from any device
 - **Siri Shortcuts** (voice) — add and complete tasks hands-free *(Phase 3)*
 
-All your data is stored in systems you own - either locally in your machine inside Cowork, or in your own Github repo!
+All your data is stored in systems you own — locally on your machine inside a Cowork Project, or in your own GitHub repo.
 
 ---
 
