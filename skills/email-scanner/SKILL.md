@@ -1,16 +1,16 @@
 ---
 name: email-scanner
-description: Email scanning pipeline — fetches, deduplicates, and classifies emails from configured Gmail accounts, then creates GitHub Issues for actionable items.
+description: Email scanning pipeline — fetches, deduplicates, and classifies emails from all configured Gmail accounts using 3-tier classification, then creates GitHub Issues for actionable items.
 type: skill
 aidlc_phases: [build]
-tags: [email, classification, gmail, scanning, dedup]
+tags: [email, classification, gmail, scanning, dedup, tier2, tier3]
 requires: []
 ---
 
 # Email Scanner Skill
 
 ## Purpose
-Guides execution of the MLEA email scan pipeline: Gmail fetch → dedup → Tier 1 classify → GitHub Issue creation → state update.
+Guides execution of the MLEA email scan pipeline: Gmail fetch → dedup → 3-tier classify → GitHub Issue creation → state update. Supports multiple mailboxes and full 3-tier classification (Phase 2).
 
 ## Pipeline Steps
 
@@ -30,16 +30,38 @@ Read `task-data/mlea-config.json` using `lib/config.ts` `loadConfig()`. Fail cle
 - Cap at `config.scheduling.emailScan.maxEmailsPerRun` (default: 50)
 - If more available, fetch oldest first — pick up the rest next run
 - Fields needed: `messageId`, `subject`, `sender`, `date`, `snippet`
-- **Never fetch full email body in Phase 1** — snippet only
+- **Never fetch full email body** — snippet only (body is reserved for meeting note extraction in Phase 3)
 
 **Dedup (Layer 1):**
 - Call `lib/dedup.ts` `filterNewEmails(emails)`
 - Log skipped count in the scan summary
 
-**Classify:**
-- Call `lib/classify.ts` `classifyTier1(email, config.classificationRules, config.urgencyRules)`
-- If no rule matches (returns null): use `unclassifiedResult(mailboxId)` as fallback
-- Phase 2 will add Tier 2 and Tier 3 here
+**Classify — 3-tier pipeline:**
+
+**Tier 1** — `lib/classify.ts` `classifyTier1(email, config.classificationRules, config.urgencyRules)`
+- Handles ~60-70% of emails via pattern matching
+- If a result is returned with confidence ≥ 0.6: use it, skip Tier 2 and Tier 3
+
+**Tier 2** — `lib/classify.ts` `classifyTier2(email, config.urgencyRules, tier2Config)`
+- Build `tier2Config` from:
+  - `vipSenders`: from `config.urgencyRules.vipSenders`
+  - `meetingNoteSenderPatterns`: from `config.meetingNotes.senderPatterns`
+- Handles ~10-15% via structural signals (.ics, VIP senders, date in subject, meeting note services)
+- If a result is returned: use it, skip Tier 3
+
+**Tier 3** — Haiku LLM (for the remaining ~20%)
+- Build the prompt using `lib/classify.ts` `buildTier3Prompt(email, availableTags)`
+  - `availableTags`: all fully-prefixed tags from the tag registry (`lib/tag-engine.ts` `tagsForDimension()` across all dimensions)
+- Call Haiku with the prompt. Parse the JSON response.
+- Convert to result using `lib/classify.ts` `tier3ResponseToResult(response)`
+- If Haiku response is invalid JSON or confidence < 0.2: fall through to `unclassifiedResult()`
+
+**Fallback** — `lib/classify.ts` `unclassifiedResult(mailboxId)`
+- Used when all tiers fail to produce a confident classification
+- Tags with `mailbox/{id}` and `source/email` only
+
+**Tier tracking:**
+- Increment `state.stats.tierBreakdown.tier1 / .tier2 / .tier3` based on which tier classified the email
 
 **Dedup (Layer 2):**
 - Before creating any issue, check `lib/dedup.ts` `findExistingIssue(email)`
@@ -47,7 +69,10 @@ Read `task-data/mlea-config.json` using `lib/config.ts` `loadConfig()`. Fail cle
 
 **Create issue:**
 - Ensure labels exist in the GitHub repo via `lib/github-adapter.ts` `ensureLabelsExist()`
-- Call `createIssue()` with title = email subject, body = snippet + metadata block, labels = classification tags + mailbox tag
+- Call `createIssue()` with:
+  - title: email subject
+  - body: snippet + metadata block including `<!-- email-id: {messageId} -->` and `<!-- due-date: {extractedDueDate} -->` if present
+  - labels: classification tags + mailbox tag + urgency tag if suggestedUrgency is not null
 - Record with `lib/state.ts` `recordCreatedIssue()`
 
 **Record processed:**
@@ -60,12 +85,19 @@ Read `task-data/mlea-config.json` using `lib/config.ts` `loadConfig()`. Fail cle
 ### 4. Report summary
 ```
 Scanned 12 emails (personal), 8 emails (work)
-Created 3 issues, skipped 17 duplicates
+Classification: 14 Tier 1 (rules), 3 Tier 2 (structural), 3 Tier 3 (Haiku)
+Created 5 issues, skipped 15 duplicates
 Errors: none
 ```
 
+## Multi-account scanning
+Process `config.mailboxes` in order. Each mailbox has its own `lastScanTimestamp` in `mlea-state.json`. Errors in one mailbox do not prevent scanning others — catch per-mailbox and continue.
+
 ## Security constraint
 The Gmail MCP connector is connected with `gmail.readonly` OAuth scope. This skill must never attempt to send, archive, modify, or delete emails. Any code path that writes to Gmail is a bug.
+
+## Cost tracking
+Track which tier classified each email. The `tierBreakdown` stat in `mlea-state.json` surfaces this in `/mlea-status`. Tier 3 calls cost money; the breakdown lets the user see if their rules need tuning.
 
 ## References
 - [Classification rules](references/classification-rules.md)

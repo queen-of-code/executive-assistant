@@ -109,15 +109,22 @@ export interface IssueTrackerConfig {
 
 export interface SchedulingConfig {
   emailScan: {
+    /**
+     * Intended cadence — stored for reference only. Cowork's scheduler
+     * uses plain-language options (hourly, daily, etc.), not cron expressions.
+     * ⚠️ UNVERIFIED: Whether 4x/day scanning is achievable via Cowork's scheduler.
+     */
     cronExpression: string;
     maxEmailsPerRun: number;
     enabled: boolean;
   };
   dailyMaintenance: {
+    /** Intended cadence — stored for reference. Actual Cowork cadence is "daily". */
     cronExpression: string;
     enabled: boolean;
   };
   dailyBriefing: {
+    /** Intended cadence — stored for reference. Actual Cowork cadence is "on weekdays". */
     cronExpression: string;
     enabled: boolean;
   };

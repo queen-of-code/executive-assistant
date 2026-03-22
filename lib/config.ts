@@ -11,15 +11,19 @@ import type {
 
 export const DEFAULT_SCHEDULING: SchedulingConfig = {
   emailScan: {
+    // Stored as a reference cadence — Cowork's scheduler uses plain-language options,
+    // not cron expressions. ⚠️ 4x/day may not be achievable; verify in Cowork UI.
     cronExpression: "0 7,11,15,19 * * *",
     maxEmailsPerRun: 50,
     enabled: true,
   },
   dailyMaintenance: {
+    // Cowork cadence: "daily"
     cronExpression: "0 6 * * *",
     enabled: true,
   },
   dailyBriefing: {
+    // Cowork cadence: "on weekdays"
     cronExpression: "0 7 * * 1-5",
     enabled: true,
   },
@@ -139,9 +143,21 @@ export function validateConfig(config: unknown): MLEAConfig {
 
 // ─── Load / Save ──────────────────────────────────────────────────────────────
 
+// ${CLAUDE_PLUGIN_DATA} is a real env var set by Claude Code for hook and MCP
+// subprocess environments (https://code.claude.com/en/plugins-reference).
+// Whether it's set in Cowork task sessions is unconfirmed — we fall back to
+// task-data/ (relative to the working directory) so it works either way.
+const DATA_DIR =
+  process.env["MLEA_DATA_DIR"] ??
+  (process.env["CLAUDE_PLUGIN_DATA"]
+    ? path.join(process.env["CLAUDE_PLUGIN_DATA"], "mlea")
+    : "task-data");
+
 const CONFIG_PATH = path.resolve(
-  process.env["MLEA_CONFIG_PATH"] ?? "task-data/mlea-config.json"
+  process.env["MLEA_CONFIG_PATH"] ?? path.join(DATA_DIR, "mlea-config.json")
 );
+
+export { DATA_DIR };
 
 export function loadConfig(): MLEAConfig {
   if (!fs.existsSync(CONFIG_PATH)) {

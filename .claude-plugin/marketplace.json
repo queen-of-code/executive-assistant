@@ -1,0 +1,29 @@
+{
+  "name": "queen-of-code",
+  "owner": {
+    "name": "Melissa Benua",
+    "email": "melissa@queenofcode.dev"
+  },
+  "metadata": {
+    "description": "Personal productivity and life-management plugins by Queen of Code"
+  },
+  "plugins": [
+    {
+      "name": "mothers-little-executive-assistant",
+      "source": {
+        "source": "github",
+        "repo": "queen-of-code/executive-assistant"
+      },
+      "description": "Unify every source of 'things I need to do' into a single tracked backlog on GitHub Projects. Scans Gmail, manages recurring tasks, and generates daily briefings.",
+      "version": "0.2.0",
+      "author": {
+        "name": "Melissa Benua"
+      },
+      "homepage": "https://github.com/queen-of-code/executive-assistant",
+      "repository": "https://github.com/queen-of-code/executive-assistant",
+      "license": "MIT",
+      "keywords": ["productivity", "email", "tasks", "github", "gmail", "recurring"],
+      "category": "productivity"
+    }
+  ]
+}

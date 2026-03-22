@@ -11,8 +11,8 @@ Mother's Little Executive Assistant (MLEA) is a TypeScript project with an LLM i
 | | Phase | Status | Summary |
 |---|---|---|---|
 | ▶ | **Phase 1 — Foundation + Core Loop** | ✅ Complete | Plugin scaffold, `lib/` foundation, email scanner (Tier 1), GitHub adapter, `/configure-mlea`, `/scan-now`, `/add-task`, `/done`, `/my-day`, `/mlea-status`, scheduled scan |
-| | **Phase 2 — Intelligence + Recurring** | 🟡 In progress | Tier 2/3 classification, `/onboard` wizard, recurring task engine, multi-account scanning |
-| | Phase 3 — Meeting Notes + Voice | Not started | Meeting note extraction, Siri Shortcuts |
+| ▶ | **Phase 2 — Intelligence + Recurring** | ✅ Complete | Tier 2/3 classification, `/onboard` wizard, recurring task engine, `/add-recurring`, daily maintenance task, multi-account scanning, urgency escalation, due date extraction |
+| | **Phase 3 — Meeting Notes + Voice** | 🟡 In progress | Meeting note extraction, Siri Shortcuts |
 | | Phase 4 — Weekly Review + Polish | Not started | `/weekly-review`, `/view-tasks`, error handling, README |
 | | Phase 5 — Marketplace Prep | Not started | Config templates, package as `.plugin`, adapter generalization |
 
