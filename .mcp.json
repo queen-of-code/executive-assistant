@@ -1,0 +1,13 @@
+{
+  "connectors": {
+    "gmail": {
+      "type": "gmail",
+      "scopes": ["gmail.readonly"],
+      "description": "Read-only Gmail access for email scanning. MLEA never sends, archives, or modifies email."
+    },
+    "github": {
+      "type": "github",
+      "description": "GitHub Issues and Projects API for task storage and board management."
+    }
+  }
+}

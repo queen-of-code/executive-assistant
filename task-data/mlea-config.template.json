@@ -1,0 +1,62 @@
+{
+  "_comment": "Template only — /configure-mlea will write the real version. Do not commit your actual config.",
+  "version": "1.0.0",
+  "userName": "Your Name",
+  "nameVariants": ["Your Name", "Your Nickname"],
+  "mailboxes": [
+    {
+      "id": "personal",
+      "label": "Personal",
+      "email": "you@gmail.com",
+      "defaultTags": ["mailbox/personal"]
+    }
+  ],
+  "tagRegistry": {
+    "dimensions": {
+      "domain": { "prefix": "domain/", "tags": ["work", "kids", "home", "finance", "health", "school"] },
+      "source": { "prefix": "source/", "tags": ["email", "manual", "recurring", "meeting-notes", "wizard"] },
+      "type": { "prefix": "type/", "tags": ["bill", "meeting", "action", "info-request", "schedule-change", "assignment"] },
+      "urgency": { "prefix": "urgency/", "tags": ["critical", "high", "medium", "low"] },
+      "time": { "prefix": "time/", "tags": ["has-due-date", "recurring", "someday", "overdue"] },
+      "person": { "prefix": "person/", "tags": ["self"] },
+      "status": { "prefix": "status/", "tags": ["waiting-on", "delegated", "blocked"] },
+      "mailbox": { "prefix": "mailbox/", "tags": ["personal"] }
+    }
+  },
+  "classificationRules": [],
+  "urgencyRules": {
+    "vipSenders": [],
+    "keywordEscalators": {
+      "urgent": "high",
+      "action required": "high",
+      "time sensitive": "high",
+      "critical": "critical",
+      "emergency": "critical"
+    }
+  },
+  "meetingNotes": {
+    "senderPatterns": [
+      "meet@gemini\\.google\\.com",
+      "no-reply@otter\\.ai",
+      "no-reply@fireflies\\.ai",
+      "no-reply@copilot\\.microsoft\\.com"
+    ]
+  },
+  "issueTracker": {
+    "type": "github",
+    "github": {
+      "owner": "your-github-username",
+      "repo": "your-tasks-repo",
+      "projectNumber": 1,
+      "assignToSelf": true
+    }
+  },
+  "scheduling": {
+    "emailScan": { "cronExpression": "0 7,11,15,19 * * *", "maxEmailsPerRun": 50, "enabled": true },
+    "dailyMaintenance": { "cronExpression": "0 6 * * *", "enabled": true },
+    "dailyBriefing": { "cronExpression": "0 7 * * 1-5", "enabled": true },
+    "backfill": { "maxDays": 90, "batchSize": 50 },
+    "pruning": { "ledgerRetentionDays": 90 }
+  },
+  "recurringTasks": []
+}

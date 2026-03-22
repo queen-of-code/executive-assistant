@@ -1,0 +1,69 @@
+{
+  "name": "mothers-little-executive-assistant",
+  "displayName": "Mother's Little Executive Assistant",
+  "version": "0.1.0",
+  "description": "Unify every source of 'things I need to do' into a single tracked backlog on GitHub Projects.",
+  "author": "queen-of-code",
+  "commands": [
+    {
+      "name": "configure-mlea",
+      "description": "First-time setup: connect Gmail accounts, GitHub repo, and scheduling",
+      "file": "commands/configure-mlea.md"
+    },
+    {
+      "name": "scan-now",
+      "description": "Trigger an immediate email scan",
+      "file": "commands/scan-now.md"
+    },
+    {
+      "name": "add-task",
+      "description": "Add a task manually from natural language",
+      "file": "commands/add-task.md"
+    },
+    {
+      "name": "done",
+      "description": "Mark a task as complete",
+      "file": "commands/done.md"
+    },
+    {
+      "name": "my-day",
+      "description": "Generate a daily briefing of open tasks",
+      "file": "commands/my-day.md"
+    },
+    {
+      "name": "mlea-status",
+      "description": "Show health check and scan statistics",
+      "file": "commands/mlea-status.md"
+    }
+  ],
+  "skills": [
+    "skills/email-scanner/SKILL.md",
+    "skills/task-manager/SKILL.md"
+  ],
+  "connectors": [
+    "gmail",
+    "github"
+  ],
+  "scheduledTasks": [
+    {
+      "name": "mlea-email-scan",
+      "description": "Incremental email scan across all configured mailboxes",
+      "cron": "0 7,11,15,19 * * *",
+      "commandFile": "commands/scan-now.md"
+    },
+    {
+      "name": "mlea-daily-maintenance",
+      "description": "Recurring task renewal, overdue detection, ledger pruning",
+      "cron": "0 6 * * *",
+      "commandFile": "commands/mlea-status.md"
+    },
+    {
+      "name": "mlea-daily-briefing",
+      "description": "Morning task briefing on weekdays",
+      "cron": "0 7 * * 1-5",
+      "commandFile": "commands/my-day.md"
+    }
+  ],
+  "stateDirectory": "task-data",
+  "phase": "1"
+}
