@@ -620,80 +620,103 @@ Phase 1 implements this for GitHub. The interface is designed so future adapters
 
 ### How Cowork Scheduled Tasks Work
 
-MLEA runs on Cowork's scheduled tasks system. Key behaviors we rely on:
+MLEA runs on Cowork's scheduled tasks system. The following is based on Anthropic's published documentation (support.claude.com, March 2026).
 
-- **Isolated sessions:** Each scheduled run creates a fresh session. The task cannot access any previous session's context — it must be fully self-contained. This is why all state lives in JSON files on disk, not in session memory.
-- **File persistence:** The `task-data/` directory persists between runs. Scheduled tasks can read and write these files. This is how we maintain `lastScanTimestamp`, the processed email ledger, and all other state.
-- **MCP access:** Scheduled tasks can use connected MCP tools (Gmail, GitHub). The user must have authenticated these connectors before setting up MLEA's scheduled tasks.
-- **Cron in local time:** Cron expressions are evaluated in the user's local timezone, not UTC. `0 7 * * *` means 7am in whatever timezone the user's machine is set to.
+**Confirmed facts:**
+- Each scheduled task runs as its own independent Cowork session with access to connected MCP tools and plugins.
+- Cowork can read and write local files on the user's machine. Outputs are delivered "directly to your file system."
+- Scheduled task cadences use plain-language options: **hourly, daily, weekly, on weekdays, or manually**. There are no cron expressions exposed to users.
+- Tasks skip if the computer is asleep or Claude Desktop is closed. When the computer wakes up or the app reopens, Cowork reruns the skipped task automatically (one rerun, not one per missed slot — exact rerun behavior beyond this is not documented).
+- MCP connectors (Gmail, GitHub) are available to scheduled tasks, provided the user has already authenticated them.
+
+**⚠️ OPEN UNKNOWN — File persistence across sessions:**
+
+Anthropic's docs confirm that Cowork writes files to the local filesystem and those files persist on disk. However, the docs also state:
+
+> *"Memory is supported within projects but is not retained across standalone Cowork sessions."*
+
+And a GitHub issue (#31422) documents that files/skills written inside Cowork's per-session VM sandbox (`~/.config/Claude/local-agent-mode-sessions/...`) are **silently deleted when the session is cleaned up**.
+
+The critical open question: **Does `task-data/` survive between scheduled runs?**
+
+The answer depends on where Cowork writes those files:
+- If the scheduled task writes to a real local path (e.g., the project folder on disk) → files persist ✅
+- If the task runs in a VM sandbox and writes to a path inside that sandbox → files are deleted when the session ends ❌
+
+**Working hypothesis:** MLEA must be set up as a **Cowork Project** pointed at the repo directory. Cowork Projects have persistent local file storage and memory scoped to the project. Scheduled tasks created within a project should read/write the project's folder, which lives on disk outside the ephemeral session sandbox. This is the most plausible path to reliable `task-data/` persistence — but **it has not been verified with a working MLEA install**. This must be tested before treating the JSON state approach as validated.
+
+**Fallback if file persistence fails:** Move state to GitHub — write `mlea-state.json` as a file commit to the MLEA repo after each run, and read it via the GitHub API at the start of the next run. This is slower and uses more API calls but is guaranteed to work regardless of Cowork's local storage behavior.
 
 ### The "Computer Must Be On" Limitation
 
-**The honest constraint:** Cowork scheduled tasks only fire when the user's computer is awake and the Claude Desktop app is open. If the laptop is closed or asleep, the task is skipped.
+**Confirmed:** Scheduled tasks only fire when the computer is awake and Claude Desktop is open. If the laptop is closed, the task skips.
 
-**The mitigation — catch-up runs:** When the computer wakes up or the app reopens, Cowork checks if any tasks missed runs in the last 7 days. If so, it fires exactly ONE catch-up run for the most recently missed time (not one per missed slot — just the latest). Anything older than 7 days is discarded.
+**Confirmed:** When the computer wakes up / app reopens, Cowork reruns the most recently skipped task automatically. (The docs say "run it automatically once your computer wakes up" — it does not specify whether all skipped runs fire or just one. We're treating it as one rerun per task based on the language used.)
 
-**Why this is acceptable for MLEA:** The catch-up run uses `lastScanTimestamp` from `mlea-state.json`. If the last scan was Friday at 7pm and the laptop was closed all weekend, the Monday morning catch-up queries Gmail for `after:friday-7pm` and gets everything from the weekend in one batch. Nothing is lost — it's just delayed. And since GitHub Issues is cloud-hosted, the moment that catch-up run creates issues, the board is current and visible from any device.
+**⚠️ GUESSED:** The architecture doc previously claimed Cowork checks a 7-day window and fires the most-recently-missed run. **This level of detail is not in Anthropic's docs** and should be treated as an educated guess until tested.
 
-**Typical scenario:**
+**Why this is still acceptable for MLEA:** The `lastScanTimestamp` approach is robust regardless of how many catch-up runs fire. If only one catch-up runs, it uses `lastScanTimestamp` from the last successful run and fetches everything since then — so no emails are lost, just delayed. The delay is typically hours (overnight) not days, since the laptop opens every morning.
 
+**Typical scenario (based on confirmed behavior only):**
 ```
 Friday 7pm:  Last scheduled scan runs. lastScanTimestamp = Fri 7pm.
-Friday 10pm: Laptop closed. 11pm scan is missed.
-Saturday:    All 4 scans missed. Emails accumulate in Gmail.
-Sunday:      All 4 scans missed. More emails accumulate.
-Monday 7am:  Laptop opens. Cowork fires ONE catch-up run.
-             Catch-up reads lastScanTimestamp = Fri 7pm.
+Sat–Sun:     Laptop closed. Scans skipped.
+Monday 7am:  Laptop opens. Cowork reruns the skipped task.
+             Task reads lastScanTimestamp = Fri 7pm.
              Queries Gmail: "after:Fri 7pm" → gets all weekend emails.
-             Classifies and creates issues for everything.
-             Updates lastScanTimestamp = Mon 7am.
-Monday 7:05: Daily briefing fires (scheduled or manual /my-day).
-             Board is now current. User sees weekend emails as new tasks.
+             Classifies and creates issues. Updates lastScanTimestamp.
 ```
 
-**The ordering guarantee:** The daily maintenance task (6am) runs before the first email scan (7am), which runs before or alongside the daily briefing (7am). Even on catch-up, Cowork fires them in sequence, so the maintenance task handles recurring renewals before the scan adds new items, and the briefing sees all current state.
+**⚠️ GUESSED:** The ordering guarantee (maintenance runs before scan, scan before briefing) was assumed in the original architecture. Cowork does not document task execution order for multiple scheduled tasks firing at similar times. This needs testing.
+
+### Scheduled Task Setup
+
+Cowork's scheduler uses plain-language cadences. MLEA requires three scheduled tasks, set up manually by the user via `/schedule` or the Scheduled sidebar in Cowork.
+
+**⚠️ UNKNOWN:** Whether a plugin's `/configure-mlea` command can programmatically create scheduled tasks on the user's behalf, or whether the user must create them manually. Anthropic's plugin/skill documentation does not describe a mechanism for plugins to register scheduled tasks. Assume **manual setup** until proven otherwise.
+
+### 1. Email Scan
+
+**Cadence:** Daily (4x/day is not a native option — closest is hourly or daily)
+
+**⚠️ GUESSED:** The architecture calls for 4x/day scanning. Cowork's scheduler only exposes hourly, daily, weekly, on weekdays, or manually. "4x/day" is not a listed option. Options:
+- Use **hourly** (more frequent, more compute cost)
+- Use **daily** (once per day, less ideal)
+- Use **manual** (user triggers `/scan-now` themselves)
+
+The right answer depends on what cadences Cowork actually exposes in its UI. **Needs verification.**
+
+Self-contained prompt: reads config from `task-data/mlea-config.json`, reads `lastScanTimestamp` per mailbox from `mlea-state.json`, runs the email scan pipeline (fetch → dedup → classify → create issues), updates state files, reports a summary.
+
+### 2. Daily Maintenance
+
+**Cadence:** Daily (runs before the first email scan of the day)
+
+Checks for: closed recurring tasks needing renewal, approaching recurring task due dates, overdue issues needing the `time/overdue` label, stale waiting-on issues.
+
+### 3. Daily Briefing (optional)
+
+**Cadence:** On weekdays (daily on weekdays)
+
+Generates and delivers the `/my-day` briefing. Also triggerable on demand via the `/my-day` command.
 
 ### Multi-Device Considerations
 
-If MLEA runs on multiple machines (e.g., MacBook and iMac), each has its own `mlea-state.json` and `processed-emails.json`. Both machines could scan the same emails. The dedup-against-GitHub-Issues layer (check for existing issue with matching title + email reference before creating) prevents duplicate tasks. But it's wasteful.
+If MLEA runs on multiple machines (e.g., MacBook and iMac), each has its own `mlea-state.json` and `processed-emails.json`. Both machines could scan the same emails. The dedup-against-GitHub-Issues layer prevents duplicate tasks. But it's wasteful.
 
-**Recommendation for Phase 1:** Designate one machine as the scanner. Use other devices only for Cowork commands (`/my-day`, `/done`, `/add-task`) and the GitHub Projects board.
-
-**Future option:** If true multi-device scanning is needed, move state to a shared location (GitHub repo file, or a lightweight cloud store). Or move to the cloud execution model below.
+**Recommendation:** Designate one machine as the scanner. Use other devices only for Cowork commands (`/my-day`, `/done`, `/add-task`) and the GitHub Projects board.
 
 ### Cloud Execution Paths (Phase 5+, if needed)
 
 If "scan happens when I open my laptop" proves insufficient, two escalation paths exist:
 
 **Option A — GitHub Actions Cron:**
-A lightweight GitHub Action runs every 4 hours in the cloud. It uses a Gmail service account (or OAuth refresh token stored as a GitHub Secret), runs the TypeScript classification code directly, and creates issues via the GitHub API. This requires setting up Gmail API credentials outside of Cowork's MCP, but the classification logic (`lib/classify.ts`) is portable since it's plain TypeScript. No laptop needed. The LLM calls (Tier 3 classification) would need to hit the Claude API directly rather than going through Cowork.
+A lightweight GitHub Action runs on a schedule in the cloud. It uses a Gmail service account (or OAuth refresh token stored as a GitHub Secret), runs the TypeScript classification code directly, and creates issues via the GitHub API. The classification logic (`lib/classify.ts`) is portable plain TypeScript. LLM calls (Tier 3) would need to hit the Claude API directly.
 
 **Option B — Google Apps Script:**
-A Google Apps Script runs natively in Google's cloud on a trigger schedule. It has direct Gmail access (no OAuth setup — it's running inside Google). Extremely reliable, zero infrastructure cost. The downside: it's a separate codebase (Google Apps Script is JavaScript, not TypeScript), and it can't easily use Claude for Tier 3 classification. It would be a Tier 1 + 2 only scanner — still catches 80%+ of actionable emails.
+Runs natively in Google's cloud. Direct Gmail access, zero infrastructure cost. Downside: separate JavaScript codebase, no easy Tier 3 LLM classification. Still handles 80%+ of emails with Tier 1+2.
 
-Both options are documented here for future reference. For Phase 1-4, the Cowork scheduled task with catch-up is the right starting point.
-
-### Scheduled Tasks Created by MLEA
-
-MLEA creates three scheduled tasks during `/configure-mlea`:
-
-### 1. Email Scan (default: 4x/day)
-
-Cron: `0 7,11,15,19 * * *` (7am, 11am, 3pm, 7pm local time)
-
-Self-contained prompt that: reads config from `task-data/mlea-config.json`, reads `lastScanTimestamp` per mailbox from `mlea-state.json`, runs the email scan pipeline (fetch → dedup → classify → create issues), updates state files, and reports a summary of what was processed.
-
-### 2. Daily Maintenance (1x/day)
-
-Cron: `0 6 * * *` (6am local time, before the first scan)
-
-Checks for: closed recurring tasks needing renewal (query GitHub for recently closed issues with `time/recurring` label), approaching recurring task due dates (create issues if `nextDue` is within 3 days), overdue issues needing the `time/overdue` label, and stale waiting-on issues (>7 days).
-
-### 3. Daily Briefing (1x/day, optional)
-
-Cron: `0 7 * * 1-5` (7am weekdays local time, or user's preference)
-
-Generates and delivers the `/my-day` briefing. Also triggerable on demand via the `/my-day` command.
+Both are documented for future reference. For Phase 1-4, the Cowork scheduled task approach is the right starting point — with the file persistence caveat above.
 
 ---
 

@@ -1,9 +1,11 @@
 # Daily Maintenance Scheduled Task
 
-**This is a scheduled Cowork task, not a user-facing command.** It runs automatically at 6am daily (configurable in `task-data/mlea-config.json`).
+**This is a scheduled Cowork task, not a user-facing command.** It is set up manually by the user in the Cowork Scheduled Tasks panel (or via `/schedule`), scoped to the MLEA Cowork Project.
 
-## Cron schedule
-`0 6 * * *` — 6am local time, every day
+## Cadence
+**Daily** — set to run once per day, before the email scan task.
+
+> ⚠️ **Note:** Cowork's scheduler exposes plain-language cadences (hourly, daily, weekly, on weekdays, manually) — not cron expressions. The desired behavior is "daily, early morning." Exact time control within a daily cadence may be limited to what Cowork's UI exposes. The ordering relative to the email scan task is not guaranteed by the scheduler; the task prompt should be written defensively (i.e., it doesn't assume the scan hasn't already run).
 
 ## Purpose
 Handles all recurring lifecycle management:
@@ -15,6 +17,8 @@ Handles all recurring lifecycle management:
 This task fires before the email scan (7am) and the daily briefing (7am), so the board is current before the user's morning context.
 
 ## Implementation guide
+
+> ⚠️ **State persistence assumption:** Steps below assume `task-data/` files written in one Cowork session are readable in the next. This holds if MLEA is run inside a Cowork Project pointed at the repo directory. If the files are written inside Cowork's ephemeral VM sandbox instead, they will not persist. **Test this before relying on it.** If persistence fails, the fallback is to read/write state via GitHub API (commit state files to the repo).
 
 ### Step 1 — Load state
 - Read `task-data/mlea-config.json` via `lib/config.ts` `loadConfig()`

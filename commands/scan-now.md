@@ -17,10 +17,12 @@ Trigger an immediate email scan. Optionally backfill N days of history.
    c. If `--backfill N`, queries for emails from the last N days instead
    d. Caps at `maxEmailsPerRun` (default 50) — oldest first
 3. Deduplicates against `task-data/processed-emails.json`
-4. Classifies using Tier 1 rule engine (`lib/classify.ts`)
+4. Classifies using 3-tier pipeline (`lib/classify.ts`)
 5. Creates GitHub Issues for actionable items (`lib/github-adapter.ts`)
 6. Updates `lastScanTimestamp` and stats in `task-data/mlea-state.json`
 7. Reports a summary: X emails scanned, Y issues created, Z duplicates skipped
+
+> ⚠️ **State persistence assumption:** Steps 1, 2a, and 3 read state files that must have been written by a previous session. This works if MLEA runs inside a Cowork Project (persistent local storage). If run as a standalone Cowork session, these files may not exist. See architecture doc for details.
 
 ## Backfill behavior
 - `--backfill` overrides the timestamp for this run only

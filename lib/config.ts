@@ -11,15 +11,19 @@ import type {
 
 export const DEFAULT_SCHEDULING: SchedulingConfig = {
   emailScan: {
+    // Stored as a reference cadence — Cowork's scheduler uses plain-language options,
+    // not cron expressions. ⚠️ 4x/day may not be achievable; verify in Cowork UI.
     cronExpression: "0 7,11,15,19 * * *",
     maxEmailsPerRun: 50,
     enabled: true,
   },
   dailyMaintenance: {
+    // Cowork cadence: "daily"
     cronExpression: "0 6 * * *",
     enabled: true,
   },
   dailyBriefing: {
+    // Cowork cadence: "on weekdays"
     cronExpression: "0 7 * * 1-5",
     enabled: true,
   },
