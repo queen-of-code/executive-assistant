@@ -143,9 +143,21 @@ export function validateConfig(config: unknown): MLEAConfig {
 
 // ─── Load / Save ──────────────────────────────────────────────────────────────
 
+// ${CLAUDE_PLUGIN_DATA} is a real env var set by Claude Code for hook and MCP
+// subprocess environments (https://code.claude.com/en/plugins-reference).
+// Whether it's set in Cowork task sessions is unconfirmed — we fall back to
+// task-data/ (relative to the working directory) so it works either way.
+const DATA_DIR =
+  process.env["MLEA_DATA_DIR"] ??
+  (process.env["CLAUDE_PLUGIN_DATA"]
+    ? path.join(process.env["CLAUDE_PLUGIN_DATA"], "mlea")
+    : "task-data");
+
 const CONFIG_PATH = path.resolve(
-  process.env["MLEA_CONFIG_PATH"] ?? "task-data/mlea-config.json"
+  process.env["MLEA_CONFIG_PATH"] ?? path.join(DATA_DIR, "mlea-config.json")
 );
+
+export { DATA_DIR };
 
 export function loadConfig(): MLEAConfig {
   if (!fs.existsSync(CONFIG_PATH)) {

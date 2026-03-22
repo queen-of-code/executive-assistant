@@ -86,13 +86,35 @@ export GITHUB_TOKEN=ghp_your_token_here
 ```
 The token needs `repo` scope (to create and read issues).
 
-### Step 5 — Install MLEA as a Cowork plugin
+### Step 5 — Install MLEA as a plugin
 
-1. In Claude Desktop → **Cowork** tab → click **Customize** in the left sidebar
-2. Click **Browse plugins**
-3. Click **Upload a custom plugin file** and select the `executive-assistant/` directory
+**Option A: Local install (development / personal use)**
 
-Or, if Cowork supports loading from a local path directly, point it at the cloned directory.
+Inside Cowork, run:
+
+```
+/plugin marketplace add queen-of-code/executive-assistant
+/plugin install mothers-little-executive-assistant@queen-of-code
+```
+
+This adds the GitHub repo as a marketplace and installs the plugin from it.
+
+**Option B: Load directly without installing (quickest for testing)**
+
+Start Claude Code with the plugin directory:
+
+```bash
+claude --plugin-dir ./executive-assistant
+```
+
+Or inside an active Cowork session:
+
+```
+/plugin marketplace add ./executive-assistant
+/plugin install mothers-little-executive-assistant@executive-assistant
+```
+
+> **Note:** Once the repo is public on GitHub, Option A is the cleanest path. For now (private repo), Option B works as long as you're authenticated.
 
 ### Step 6 — Run the setup wizard
 
@@ -189,7 +211,9 @@ See [`CONNECTORS.md`](CONNECTORS.md) for the full breakdown of what each connect
 ## Repository structure
 
 ```
-├── .claude-plugin/plugin.json   Plugin manifest
+├── .claude-plugin/
+│   ├── plugin.json              Plugin manifest
+│   └── marketplace.json         GitHub marketplace catalog (install via /plugin marketplace add)
 ├── .mcp.json                    Connector declarations
 ├── AGENTS.md                    Phase tracker + contributor guide
 ├── CONNECTORS.md                What each connector can/cannot do
