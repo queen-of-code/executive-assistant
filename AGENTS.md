@@ -91,6 +91,18 @@ The skills relevant to this codebase:
 - Valid types: `feat`, `fix`, `refactor`, `style`, `docs`, `test`, `infra`
 - CI runs `npm run build` and `npm test` — both must pass before merge.
 
+### Version bump on every PR
+
+**Every PR must increment the minor version** in both files before merge. The marketplace uses this to show users that an update is available — without a version bump, Cowork won't know to offer a refresh.
+
+Files to update:
+- `.claude-plugin/plugin.json` → `"version"` field
+- `package.json` → `"version"` field
+
+Both must always match. Bump minor (the middle number): `0.2.0` → `0.3.0`. Include the bump in the same commit as the PR's changes, not as a separate commit.
+
+If you forget: the user cannot tell a new version is available in the marketplace and has to manually force-refresh. Don't skip this.
+
 ---
 
 ## Key files and directories
