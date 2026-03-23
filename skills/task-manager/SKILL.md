@@ -1,6 +1,6 @@
 ---
 name: task-manager
-description: Task lifecycle management — creating, completing, querying, and maintaining GitHub Issues as MLEA tasks.
+description: Task lifecycle management — creating, completing, querying, and maintaining GitHub Issues as MEA tasks.
 type: skill
 aidlc_phases: [build]
 tags: [github, issues, tasks, completion, fuzzy-match]

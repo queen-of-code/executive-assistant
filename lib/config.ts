@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import type {
-  MLEAConfig,
+  MEAConfig,
   SchedulingConfig,
   UrgencyRules,
   MeetingNotesConfig,
@@ -68,7 +68,7 @@ export class ConfigValidationError extends Error {
   }
 }
 
-export function validateConfig(config: unknown): MLEAConfig {
+export function validateConfig(config: unknown): MEAConfig {
   if (!config || typeof config !== "object") {
     throw new ConfigValidationError("root", "config must be an object");
   }
@@ -138,7 +138,7 @@ export function validateConfig(config: unknown): MLEAConfig {
     );
   }
 
-  return config as MLEAConfig;
+  return config as MEAConfig;
 }
 
 // ─── Load / Save ──────────────────────────────────────────────────────────────
@@ -148,21 +148,21 @@ export function validateConfig(config: unknown): MLEAConfig {
 // Whether it's set in Cowork task sessions is unconfirmed — we fall back to
 // task-data/ (relative to the working directory) so it works either way.
 const DATA_DIR =
-  process.env["MLEA_DATA_DIR"] ??
+  process.env["MEA_DATA_DIR"] ??
   (process.env["CLAUDE_PLUGIN_DATA"]
     ? path.join(process.env["CLAUDE_PLUGIN_DATA"], "mlea")
     : "task-data");
 
 const CONFIG_PATH = path.resolve(
-  process.env["MLEA_CONFIG_PATH"] ?? path.join(DATA_DIR, "mlea-config.json")
+  process.env["MEA_CONFIG_PATH"] ?? path.join(DATA_DIR, "mea-config.json")
 );
 
 export { DATA_DIR };
 
-export function loadConfig(): MLEAConfig {
+export function loadConfig(): MEAConfig {
   if (!fs.existsSync(CONFIG_PATH)) {
     throw new Error(
-      `MLEA config not found at ${CONFIG_PATH}. Run /configure-mlea to set up.`
+      `MEA config not found at ${CONFIG_PATH}. Run /configure-mlea to set up.`
     );
   }
 
@@ -178,7 +178,7 @@ export function loadConfig(): MLEAConfig {
   return validateConfig(raw);
 }
 
-export function saveConfig(config: MLEAConfig): void {
+export function saveConfig(config: MEAConfig): void {
   const dir = path.dirname(CONFIG_PATH);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
@@ -191,14 +191,15 @@ export function saveConfig(config: MLEAConfig): void {
 export function buildDefaultConfig(partial: {
   userName: string;
   nameVariants: string[];
-  mailboxes: MLEAConfig["mailboxes"];
-  issueTracker: MLEAConfig["issueTracker"];
-}): MLEAConfig {
+  mailboxes: MEAConfig["mailboxes"];
+  issueTracker: MEAConfig["issueTracker"];
+}): MEAConfig {
   return {
     version: "1.0.0",
     userName: partial.userName,
     nameVariants: partial.nameVariants,
     mailboxes: partial.mailboxes,
+    gmailMode: "connector",
     tagRegistry: {
       dimensions: {
         domain: {

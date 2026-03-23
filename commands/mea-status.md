@@ -1,6 +1,6 @@
 # /mlea-status
 
-Health check dashboard for MLEA.
+Health check dashboard for MEA.
 
 ## Usage
 ```
@@ -20,7 +20,7 @@ Health check dashboard for MLEA.
 
 ## Example output
 ```
-MLEA Status — March 22, 2026 10:00am
+MEA Status — March 22, 2026 10:00am
 
 Mailboxes:
   personal  — last scan 47 min ago (3/22 9:13am) | next scan 11am

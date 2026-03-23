@@ -9,7 +9,7 @@
   },
   "plugins": [
     {
-      "name": "mothers-little-executive-assistant",
+      "name": "moms-executive-assistant",
       "source": "./",
       "description": "Unify every source of 'things I need to do' into a single tracked backlog on GitHub Projects. Scans Gmail, manages recurring tasks, and generates daily briefings.",
       "version": "0.2.0",

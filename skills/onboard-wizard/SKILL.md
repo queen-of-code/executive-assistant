@@ -20,7 +20,7 @@ Guides execution of the `/onboard` wizard: domain interview → plan generation 
 ## Pipeline
 
 ### Phase 1 — Interview
-1. Load `task-data/mlea-config.json` (fail clearly if missing)
+1. Load `task-data/mea-config.json` (fail clearly if missing)
 2. Generate 3–5 domain-specific interview questions using Sonnet (see prompt in `/commands/onboard.md`)
 3. Ask questions conversationally — collect all answers before proceeding
 

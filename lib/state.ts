@@ -1,16 +1,16 @@
 import * as fs from "fs";
 import * as path from "path";
 import type {
-  MLEAState,
+  MEAState,
   ProcessedEmailLedger,
   CreatedIssuesLedger,
-  MLEAStats,
+  MEAStats,
 } from "./types";
 
 // ─── Paths ────────────────────────────────────────────────────────────────────
 
 function dataPath(filename: string): string {
-  const dir = process.env["MLEA_DATA_DIR"] ?? "task-data";
+  const dir = process.env["MEA_DATA_DIR"] ?? "task-data";
   return path.resolve(dir, filename);
 }
 
@@ -40,7 +40,7 @@ function readJson<T>(filePath: string, defaultValue: T): T {
 
 // ─── Default State ───────────────────────────────────────────────────────────
 
-const DEFAULT_STATS: MLEAStats = {
+const DEFAULT_STATS: MEAStats = {
   totalEmailsScanned: 0,
   totalIssuesCreated: 0,
   scansSinceInstall: 0,
@@ -48,21 +48,21 @@ const DEFAULT_STATS: MLEAStats = {
   categoryBreakdown: {},
 };
 
-const DEFAULT_STATE: MLEAState = {
+const DEFAULT_STATE: MEAState = {
   mailboxes: {},
   lastMaintenanceRun: null,
   lastBriefingRun: null,
   stats: DEFAULT_STATS,
 };
 
-// ─── MLEAState ───────────────────────────────────────────────────────────────
+// ─── MEAState ───────────────────────────────────────────────────────────────
 
-export function readState(): MLEAState {
-  return readJson<MLEAState>(dataPath("mlea-state.json"), DEFAULT_STATE);
+export function readState(): MEAState {
+  return readJson<MEAState>(dataPath("mea-state.json"), DEFAULT_STATE);
 }
 
-export function writeState(state: MLEAState): void {
-  atomicWrite(dataPath("mlea-state.json"), state);
+export function writeState(state: MEAState): void {
+  atomicWrite(dataPath("mea-state.json"), state);
 }
 
 export function updateMailboxScanState(

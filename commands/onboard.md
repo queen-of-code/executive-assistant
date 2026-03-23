@@ -30,12 +30,12 @@ The onboard wizard solves the cold-start problem. Instead of requiring manual co
 4. **Confirmation** — Shows the full plan before doing anything:
    > I'll create 4 recurring tasks, add 3 new tags, and set up 2 email rules. Sound good?
 
-5. **Execution** — On approval: creates GitHub Issues for one-time tasks, adds recurring tasks to `task-data/recurring-tasks.json`, updates `task-data/mlea-config.json` with new rules and tags, and adds tags to the tag registry.
+5. **Execution** — On approval: creates GitHub Issues for one-time tasks, adds recurring tasks to `task-data/recurring-tasks.json`, updates `task-data/mea-config.json` with new rules and tags, and adds tags to the tag registry.
 
 ## Implementation guide
 
 ### Step 1 — Load config
-Read `task-data/mlea-config.json`. Fail clearly if not found.
+Read `task-data/mea-config.json`. Fail clearly if not found.
 
 ### Step 2 — Domain question generation (Sonnet)
 Prompt:

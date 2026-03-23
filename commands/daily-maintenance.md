@@ -1,6 +1,6 @@
 # Daily Maintenance Scheduled Task
 
-**This is a scheduled Cowork task, not a user-facing command.** It is set up manually by the user in the Cowork Scheduled Tasks panel (or via `/schedule`), scoped to the MLEA Cowork Project.
+**This is a scheduled Cowork task, not a user-facing command.** It is set up manually by the user in the Cowork Scheduled Tasks panel (or via `/schedule`), scoped to the MEA Cowork Project.
 
 ## Cadence
 **Daily** — set to run once per day, before the email scan task.
@@ -18,10 +18,10 @@ This task fires before the email scan (7am) and the daily briefing (7am), so the
 
 ## Implementation guide
 
-> ⚠️ **State persistence assumption:** Steps below assume `task-data/` files written in one Cowork session are readable in the next. This holds if MLEA is run inside a Cowork Project pointed at the repo directory. If the files are written inside Cowork's ephemeral VM sandbox instead, they will not persist. **Test this before relying on it.** If persistence fails, the fallback is to read/write state via GitHub API (commit state files to the repo).
+> ⚠️ **State persistence assumption:** Steps below assume `task-data/` files written in one Cowork session are readable in the next. This holds if MEA is run inside a Cowork Project pointed at the repo directory. If the files are written inside Cowork's ephemeral VM sandbox instead, they will not persist. **Test this before relying on it.** If persistence fails, the fallback is to read/write state via GitHub API (commit state files to the repo).
 
 ### Step 1 — Load state
-- Read `task-data/mlea-config.json` via `lib/config.ts` `loadConfig()`
+- Read `task-data/mea-config.json` via `lib/config.ts` `loadConfig()`
 - Read current state via `lib/state.ts` `readState()`
 
 ### Step 2 — Find closed recurring issues (GitHub)
@@ -88,7 +88,7 @@ Daily maintenance complete:
 ```
 
 ## Failure handling
-- If GitHub is unreachable: log the error to `mlea-state.lastMaintenanceRun` with an error note. Do not throw — the task must complete even partially.
+- If GitHub is unreachable: log the error to `mea-state.lastMaintenanceRun` with an error note. Do not throw — the task must complete even partially.
 - If config is malformed: stop and log the validation error. Do not attempt issue creation with bad data.
 
 ## Requires

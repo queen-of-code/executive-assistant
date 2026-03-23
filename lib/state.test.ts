@@ -18,13 +18,13 @@ import {
 let tmpDir: string;
 
 beforeEach(() => {
-  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "mlea-test-"));
-  process.env["MLEA_DATA_DIR"] = tmpDir;
+  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "mea-test-"));
+  process.env["MEA_DATA_DIR"] = tmpDir;
 });
 
 afterEach(() => {
   fs.rmSync(tmpDir, { recursive: true, force: true });
-  delete process.env["MLEA_DATA_DIR"];
+  delete process.env["MEA_DATA_DIR"];
 });
 
 describe("readState / writeState", () => {

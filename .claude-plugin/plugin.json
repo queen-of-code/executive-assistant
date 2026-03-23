@@ -1,6 +1,6 @@
 {
-  "name": "mothers-little-executive-assistant",
-  "displayName": "Mother's Little Executive Assistant",
+  "name": "moms-executive-assistant",
+  "displayName": "Mom's Executive Assistant",
   "version": "0.2.0",
   "description": "Unify every source of 'things I need to do' into a single tracked backlog on GitHub Projects.",
   "author": {

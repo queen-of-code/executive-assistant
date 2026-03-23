@@ -1,4 +1,4 @@
-// Core type definitions for MLEA.
+// Core type definitions for MEA.
 // These are the shared interfaces used across all lib/ modules.
 // The architecture doc (Project-Overview-Architecture.md) is the source of truth.
 
@@ -139,11 +139,17 @@ export interface SchedulingConfig {
 
 // ─── Top-level Config ────────────────────────────────────────────────────────
 
-export interface MLEAConfig {
+export interface MEAConfig {
   version: string;
   userName: string;
   nameVariants: string[];
   mailboxes: Mailbox[];
+  /**
+   * "connector" — use the built-in Claude Gmail connector (single account, no GCP setup).
+   * "mcp"       — use the bundled gmail MCP server (multiple accounts, requires GCP OAuth client).
+   * Defaults to "connector" so single-account users need no extra setup.
+   */
+  gmailMode: "connector" | "mcp";
   tagRegistry: TagRegistry;
   classificationRules: ClassificationRule[];
   urgencyRules: UrgencyRules;
@@ -162,7 +168,7 @@ export interface MailboxScanState {
   lastScanErrors: string[];
 }
 
-export interface MLEAStats {
+export interface MEAStats {
   totalEmailsScanned: number;
   totalIssuesCreated: number;
   scansSinceInstall: number;
@@ -170,11 +176,11 @@ export interface MLEAStats {
   categoryBreakdown: Record<Tag, number>;
 }
 
-export interface MLEAState {
+export interface MEAState {
   mailboxes: Record<string, MailboxScanState>;
   lastMaintenanceRun: string | null;
   lastBriefingRun: string | null;
-  stats: MLEAStats;
+  stats: MEAStats;
 }
 
 // ─── Dedup Ledger ────────────────────────────────────────────────────────────

@@ -1,6 +1,6 @@
-# MLEA – Agent & Contributor Guide
+# MEA – Agent & Contributor Guide
 
-Mother's Little Executive Assistant (MLEA) is a TypeScript project with an LLM intelligence layer. This file is the starting point for any AI agent or human contributor working in this repo.
+Mom's Executive Assistant (MEA) is a TypeScript project with an LLM intelligence layer. This file is the starting point for any AI agent or human contributor working in this repo.
 
 ---
 
@@ -32,7 +32,7 @@ An agent must not declare a phase done without this file reflecting it.
 
 ## Project context
 
-MLEA is a personal life task management system. It unifies email, recurring schedules, manual input, and meeting notes into a single GitHub Projects board. The architecture is documented in [`Project-Overview-Architecture.md`](Project-Overview-Architecture.md) — read it before making structural changes.
+MEA is a personal life task management system. It unifies email, recurring schedules, manual input, and meeting notes into a single GitHub Projects board. The architecture is documented in [`Project-Overview-Architecture.md`](Project-Overview-Architecture.md) — read it before making structural changes.
 
 **Core principle:** GitHub Projects is the UI *and* the database. Every task becomes a GitHub Issue. The `lib/` guardrail code handles all deterministic logic (classification, dedup, fuzzy matching, state). LLM calls are reserved for judgment-requiring tasks only.
 

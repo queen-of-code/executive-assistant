@@ -1,7 +1,7 @@
 import { validateConfig, buildDefaultConfig, ConfigValidationError } from "./config";
-import type { MLEAConfig } from "./types";
+import type { MEAConfig } from "./types";
 
-const validConfig: MLEAConfig = buildDefaultConfig({
+const validConfig: MEAConfig = buildDefaultConfig({
   userName: "Melissa",
   nameVariants: ["Melissa", "Mel"],
   mailboxes: [
