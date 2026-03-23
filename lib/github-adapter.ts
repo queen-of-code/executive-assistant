@@ -22,9 +22,18 @@ export interface IssueTrackerAdapter {
 
 // ─── GitHub REST Client ───────────────────────────────────────────────────────
 
-// This adapter calls the GitHub REST API directly via fetch.
-// The GitHub token is read from the GITHUB_TOKEN environment variable,
-// which is set by the Cowork MCP config — never hard-coded here.
+// IMPORTANT: This adapter is only used when GITHUB_TOKEN is set in the environment.
+// When MEA runs inside Claude Cowork with the GitHub MCP connector attached, the
+// agent should call GitHub MCP tools directly (create_issue, get_repo, etc.) and
+// NOT instantiate this class. The skill/command docs govern which path is taken.
+//
+// This class exists for:
+//   - Local CLI usage or GitHub Actions where GITHUB_TOKEN is available
+//   - Testing outside Cowork
+//
+// The calling agent must check: if GitHub MCP tools are available → use them.
+// If only GITHUB_TOKEN is available → use this class.
+// If neither → fail clearly with instructions for both paths.
 export class GitHubAdapter implements IssueTrackerAdapter {
   private readonly baseUrl: string;
   private readonly token: string;
@@ -40,8 +49,10 @@ export class GitHubAdapter implements IssueTrackerAdapter {
     const token = process.env["GITHUB_TOKEN"];
     if (!token) {
       throw new Error(
-        "GITHUB_TOKEN environment variable is not set. " +
-          "Configure the GitHub MCP connector in your Cowork settings."
+        "GitHubAdapter requires GITHUB_TOKEN but it is not set.\n" +
+          "If you are running inside Claude Cowork with the GitHub connector attached,\n" +
+          "use the GitHub MCP tools directly instead of instantiating GitHubAdapter.\n" +
+          "If running outside Cowork, set GITHUB_TOKEN with repo scope."
       );
     }
     this.token = token;

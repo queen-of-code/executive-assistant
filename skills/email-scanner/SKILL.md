@@ -15,15 +15,23 @@ Guides execution of the MEA email scan pipeline: Gmail fetch → dedup → 3-tie
 ## Pipeline Steps
 
 ### 1. Load configuration
-Read `task-data/mea-config.json` using `lib/config.ts` `loadConfig()`. Fail clearly if not found — the user needs to run `/configure-mlea` first.
+Read `task-data/mea-config.json` using `lib/config.ts` `loadConfig()`. Fail clearly if not found — the user needs to run `/configure-mea` first.
 
 ### 2. For each configured mailbox
 
 **Determine scan window:**
 - Call `lib/state.ts` `getLastScanTimestamp(mailboxId)`
-- If null (first run): query Gmail with `is:unread`
-- If set: query Gmail with `after:{lastScanTimestamp}`
-- If `--backfill N`: query with `after:{N days ago}` regardless of timestamp
+- If null (first run): **Ask the user:**
+  > "How far back should I scan for the initial setup? (1–90 days, default 30)"
+  Accept the answer (or default to 30) and use it as N for the first-run query.
+- If set: query Gmail with `after:{lastScanTimestamp}` + category/spam filters (see below)
+- If `--backfill N`: query with `after:{N days ago}` + filters, regardless of timestamp
+
+**Gmail filter applied to all scans (connector and MCP mode):**
+```
+-category:promotions -category:social -category:updates -in:spam -in:trash
+```
+Append this to every query. This excludes Gmail's auto-categorised low-value tabs and captures read-but-unactioned emails that `is:unread` would miss.
 
 **Fetch emails — method depends on `config.gmailMode`:**
 
@@ -34,8 +42,8 @@ Read `task-data/mea-config.json` using `lib/config.ts` `loadConfig()`. Fail clea
 
 **If `gmailMode === "mcp"` (multi-account):**
 - Use the `gmail_search` MCP tool from the bundled MCP server
-- Tool call: `gmail_search({ account: mailbox.email, query: "after:{lastScanTimestamp}", maxResults: 50 })`
-- First run: `gmail_search({ account: mailbox.email, query: "is:unread", maxResults: 50 })`
+- Tool call: `gmail_search({ account: mailbox.email, query: "after:{lastScanTimestamp} -category:promotions -category:social -category:updates -in:spam -in:trash", maxResults: 50 })`
+- First run: `gmail_search({ account: mailbox.email, query: "after:{N days ago} -category:promotions -category:social -category:updates -in:spam -in:trash", maxResults: 50 })`
 - If `gmail_list_accounts` returns an empty list, the MCP server has no tokens — surface a clear error:
   `"Gmail MCP server has no authenticated accounts. Run: cd mcp/gmail-server && npm run auth -- --account {email}"`
 
@@ -80,12 +88,23 @@ Read `task-data/mea-config.json` using `lib/config.ts` `loadConfig()`. Fail clea
 - Before creating any issue, check `lib/dedup.ts` `findExistingIssue(email)`
 - If found: skip issue creation, still record in processed-emails ledger
 
-**Create issue:**
-- Ensure labels exist in the GitHub repo via `lib/github-adapter.ts` `ensureLabelsExist()`
-- Call `createIssue()` with:
-  - title: email subject
-  - body: snippet + metadata block including `<!-- email-id: {messageId} -->` and `<!-- due-date: {extractedDueDate} -->` if present
-  - labels: classification tags + mailbox tag + urgency tag if suggestedUrgency is not null
+**Create issue — method depends on what GitHub integration is available:**
+
+> ⚠️ **Do NOT use `lib/github-adapter.ts` when running inside Cowork with the GitHub connector attached.** `GitHubAdapter` requires `GITHUB_TOKEN` and will fail if only the connector is present. Use whichever path applies:
+
+**If the GitHub MCP connector is attached (Cowork default):**
+- Use the GitHub MCP tools directly: `create_issue`, `add_labels_to_issue`, `list_labels_for_repo`, `create_label`
+- These are the tools provided by the Cowork GitHub connector — use them natively
+- To ensure labels exist: call `list_labels_for_repo`, then `create_label` for any missing
+- To create the issue: call `create_issue` with title, body (snippet + metadata block), and labels array
+
+**If `GITHUB_TOKEN` is set (CLI or GitHub Actions):**
+- Instantiate `lib/github-adapter.ts` `GitHubAdapter(config.github)`
+- Call `ensureLabelsExist()` then `createIssue()`
+
+**Both modes — issue body format:**
+- body: snippet + metadata block including `<!-- email-id: {messageId} -->` and `<!-- due-date: {extractedDueDate} -->` if present
+- labels: classification tags + mailbox tag + urgency tag if suggestedUrgency is not null
 - Record with `lib/state.ts` `recordCreatedIssue()`
 
 **Record processed:**
