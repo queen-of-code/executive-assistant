@@ -25,8 +25,21 @@ Read `task-data/mlea-config.json` using `lib/config.ts` `loadConfig()`. Fail cle
 - If set: query Gmail with `after:{lastScanTimestamp}`
 - If `--backfill N`: query with `after:{N days ago}` regardless of timestamp
 
-**Fetch emails:**
-- Use Gmail MCP connector (read-only)
+**Fetch emails — method depends on `config.gmailMode`:**
+
+**If `gmailMode === "connector"` (default, single account):**
+- Use the built-in Claude Gmail connector tools
+- Tool call syntax: native connector (search, list messages)
+- Only the first configured mailbox is available via the connector
+
+**If `gmailMode === "mcp"` (multi-account):**
+- Use the `gmail_search` MCP tool from the bundled MCP server
+- Tool call: `gmail_search({ account: mailbox.email, query: "after:{lastScanTimestamp}", maxResults: 50 })`
+- First run: `gmail_search({ account: mailbox.email, query: "is:unread", maxResults: 50 })`
+- If `gmail_list_accounts` returns an empty list, the MCP server has no tokens — surface a clear error:
+  `"Gmail MCP server has no authenticated accounts. Run: cd mcp/gmail-server && npm run auth -- --account {email}"`
+
+**Both modes:**
 - Cap at `config.scheduling.emailScan.maxEmailsPerRun` (default: 50)
 - If more available, fetch oldest first — pick up the rest next run
 - Fields needed: `messageId`, `subject`, `sender`, `date`, `snippet`
@@ -94,7 +107,7 @@ Errors: none
 Process `config.mailboxes` in order. Each mailbox has its own `lastScanTimestamp` in `mlea-state.json`. Errors in one mailbox do not prevent scanning others — catch per-mailbox and continue.
 
 ## Security constraint
-The Gmail MCP connector is connected with `gmail.readonly` OAuth scope. This skill must never attempt to send, archive, modify, or delete emails. Any code path that writes to Gmail is a bug.
+Gmail access is read-only regardless of mode. In connector mode, the built-in connector uses `gmail.readonly` OAuth scope. In MCP mode, the bundled server uses the same `gmail.readonly` scope. This skill must never attempt to send, archive, modify, or delete emails. Any code path that writes to Gmail is a bug.
 
 ## Cost tracking
 Track which tier classified each email. The `tierBreakdown` stat in `mlea-state.json` surfaces this in `/mlea-status`. Tier 3 calls cost money; the breakdown lets the user see if their rules need tuning.

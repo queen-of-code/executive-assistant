@@ -1,13 +1,12 @@
 {
-  "connectors": {
+  "mcpServers": {
     "gmail": {
-      "type": "gmail",
-      "scopes": ["gmail.readonly"],
-      "description": "Read-only Gmail access for email scanning. MLEA never sends, archives, or modifies email."
-    },
-    "github": {
-      "type": "github",
-      "description": "GitHub Issues and Projects API for task storage and board management."
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/mcp/gmail-server/dist/index.js"],
+      "env": {
+        "MLEA_TOKEN_DIR": "",
+        "MLEA_OAUTH_CLIENT": ""
+      }
     }
   }
 }

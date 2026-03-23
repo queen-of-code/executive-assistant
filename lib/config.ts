@@ -199,6 +199,7 @@ export function buildDefaultConfig(partial: {
     userName: partial.userName,
     nameVariants: partial.nameVariants,
     mailboxes: partial.mailboxes,
+    gmailMode: "connector",
     tagRegistry: {
       dimensions: {
         domain: {

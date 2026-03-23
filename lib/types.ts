@@ -144,6 +144,12 @@ export interface MLEAConfig {
   userName: string;
   nameVariants: string[];
   mailboxes: Mailbox[];
+  /**
+   * "connector" — use the built-in Claude Gmail connector (single account, no GCP setup).
+   * "mcp"       — use the bundled gmail MCP server (multiple accounts, requires GCP OAuth client).
+   * Defaults to "connector" so single-account users need no extra setup.
+   */
+  gmailMode: "connector" | "mcp";
   tagRegistry: TagRegistry;
   classificationRules: ClassificationRule[];
   urgencyRules: UrgencyRules;

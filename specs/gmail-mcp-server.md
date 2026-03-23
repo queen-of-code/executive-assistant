@@ -227,6 +227,26 @@ Each command opens a browser tab. Approve → token saved to `~/.mlea/tokens/`.
 
 | Question | Status |
 |---|---|
-| Does Claude Code's `.mcp.json` support `${HOME}` expansion in env values? | ⚠️ Unverified — may need to use `process.env.HOME` in server code instead |
-| Token storage in `${CLAUDE_PLUGIN_DATA}` vs `~/.mlea/`? | Using `~/.mlea/` so tokens survive plugin reinstalls and updates |
-| Is `gmail.readonly` scope sufficient for `gmail_get_message` (full headers)? | ✅ Yes — readonly covers full message read |
+| Does Claude Code's `.mcp.json` support `${HOME}` expansion in env values? | ✅ Resolved — NO. Only `${CLAUDE_PLUGIN_ROOT}` and `${CLAUDE_PLUGIN_DATA}` are substituted. `token-store.ts` resolves `os.homedir()` directly in code instead. |
+| Token storage in `${CLAUDE_PLUGIN_DATA}` vs `~/.mlea/`? | ✅ Decided — `~/.mlea/` so tokens survive plugin reinstalls, updates, and uninstalls. |
+| Is `gmail.readonly` scope sufficient for `gmail_get_message` (full headers)? | ✅ Yes — readonly covers full message metadata read. |
+
+---
+
+## How to test
+
+No automated tests are written for the MCP server (it's integration-heavy — it calls real OAuth and real Gmail APIs). Manual verification via MCP Inspector is sufficient:
+
+```bash
+cd mcp/gmail-server
+npm run build
+npm run auth -- --account melissa@queenofcode.dev   # first time only
+npm run inspect
+```
+
+In the Inspector UI:
+1. Call `gmail_list_accounts` — confirm your address appears
+2. Call `gmail_search` with `account: "melissa@queenofcode.dev"` and `query: "is:unread"` — confirm emails come back
+3. Call `gmail_get_message` with a `messageId` from step 2 — confirm headers are populated
+4. Call `gmail_list_accounts` with NO tokens configured (rename tokens dir temporarily) — confirm empty array returned, no crash
+
