@@ -21,9 +21,17 @@ Read `task-data/mea-config.json` using `lib/config.ts` `loadConfig()`. Fail clea
 
 **Determine scan window:**
 - Call `lib/state.ts` `getLastScanTimestamp(mailboxId)`
-- If null (first run): query Gmail with `is:unread`
-- If set: query Gmail with `after:{lastScanTimestamp}`
-- If `--backfill N`: query with `after:{N days ago}` regardless of timestamp
+- If null (first run): **Ask the user:**
+  > "How far back should I scan for the initial setup? (1–90 days, default 30)"
+  Accept the answer (or default to 30) and use it as N for the first-run query.
+- If set: query Gmail with `after:{lastScanTimestamp}` + category/spam filters (see below)
+- If `--backfill N`: query with `after:{N days ago}` + filters, regardless of timestamp
+
+**Gmail filter applied to all scans (connector and MCP mode):**
+```
+-category:promotions -category:social -category:updates -in:spam -in:trash
+```
+Append this to every query. This excludes Gmail's auto-categorised low-value tabs and is more reliable than `is:unread`, which misses read-but-unactioned emails.
 
 **Fetch emails — method depends on `config.gmailMode`:**
 
@@ -34,8 +42,8 @@ Read `task-data/mea-config.json` using `lib/config.ts` `loadConfig()`. Fail clea
 
 **If `gmailMode === "mcp"` (multi-account):**
 - Use the `gmail_search` MCP tool from the bundled MCP server
-- Tool call: `gmail_search({ account: mailbox.email, query: "after:{lastScanTimestamp}", maxResults: 50 })`
-- First run: `gmail_search({ account: mailbox.email, query: "is:unread", maxResults: 50 })`
+- Tool call: `gmail_search({ account: mailbox.email, query: "after:{lastScanTimestamp} -category:promotions -category:social -category:updates -in:spam -in:trash", maxResults: 50 })`
+- First run: `gmail_search({ account: mailbox.email, query: "after:{N days ago} -category:promotions -category:social -category:updates -in:spam -in:trash", maxResults: 50 })`
 - If `gmail_list_accounts` returns an empty list, the MCP server has no tokens — surface a clear error:
   `"Gmail MCP server has no authenticated accounts. Run: cd mcp/gmail-server && npm run auth -- --account {email}"`
 

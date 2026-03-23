@@ -142,12 +142,14 @@ The scanner never reads the entire inbox. It uses a `lastScanTimestamp` per mail
 ```
 Regular run:
   Read lastScanTimestamp for this mailbox from mea-state.json
-  Query Gmail: "after:{lastScanTimestamp}" (only new emails)
+  Query Gmail: "after:{lastScanTimestamp} -category:promotions -category:social -category:updates -in:spam -in:trash"
   Process results → update lastScanTimestamp = now
 
 First run (no timestamp yet):
-  Query Gmail: "is:unread" (reasonable starting set)
+  Ask user: "How far back should I scan? (1–90 days, default 30)"
+  Query Gmail: "after:{N days ago} -category:promotions -category:social -category:updates -in:spam -in:trash"
   Process results → set lastScanTimestamp = now
+  Note: time-bounded + category-filtered is better than is:unread because it captures read-but-unactioned emails
 
 Catch-up run (laptop was asleep/closed):
   Identical to regular run — lastScanTimestamp is just older
@@ -673,7 +675,11 @@ Monday 7am:  Laptop opens. Cowork reruns the skipped task.
 
 Cowork's scheduler uses plain-language cadences. MEA requires three scheduled tasks, set up manually by the user via `/schedule` or the Scheduled sidebar in Cowork.
 
-**⚠️ UNKNOWN:** Whether a plugin's `/configure-mlea` command can programmatically create scheduled tasks on the user's behalf, or whether the user must create them manually. Anthropic's plugin/skill documentation does not describe a mechanism for plugins to register scheduled tasks. Assume **manual setup** until proven otherwise.
+**⚠️ UNKNOWN:** Whether a plugin's `/configure-mea` command can programmatically create scheduled tasks on the user's behalf, or whether the user must create them manually. Anthropic's plugin/skill documentation does not describe a mechanism for plugins to register scheduled tasks. Assume **manual setup** until proven otherwise.
+
+**User-confirmed facts about the task creation UI:**
+- Each task has two separate text fields: **Description** (short human label) and **Prompt** (the text Claude actually executes). These are distinct — don't put the prompt in the Description field.
+- Under **Advanced Options**, there is a **Project folder** setting. This must be set to the MEA Cowork Project folder. Without it, the task runs in a stateless scratch session and cannot read `task-data/` state files. This is critical for correct operation.
 
 ### 1. Email Scan
 

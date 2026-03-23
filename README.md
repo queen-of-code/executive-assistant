@@ -137,13 +137,19 @@ Cowork's scheduler doesn't support cron — it uses plain-language cadences. You
 
 In your MEA Cowork Project, click **Scheduled** in the sidebar → **+ New task** for each:
 
-| Task | Cadence | Prompt |
+Each task has two separate text fields: a **Description** (a short human-readable label) and a **Prompt** (what Claude actually runs). Don't confuse them.
+
+> **Critical:** In each task's **Advanced Options**, set **Project folder** to your MEA Cowork Project folder. This is what gives the task access to your persistent `task-data/` state. Without it, tasks run in a stateless scratch session and won't see your config or previous scan timestamps.
+
+| Description | Cadence | Prompt |
 |---|---|---|
 | MEA Email Scan | Daily (or Hourly for more frequent scanning) | `Run the MEA email scan using the email-scanner skill. Read config from task-data/mea-config.json.` |
 | MEA Daily Maintenance | Daily | `Run the MEA daily maintenance task. Check for closed recurring issues, approaching due dates, and overdue items.` |
 | MEA Daily Briefing | On weekdays *(optional — you can also just run `/my-day` manually)* | `Run /my-day to generate my daily task briefing.` |
 
 > **Note on scan frequency:** Cowork offers hourly or daily as the closest options to the ideal "a few times a day." Hourly is more responsive but uses more of your usage quota. Daily is conservative. Start with daily and adjust.
+
+> **Note on schedule execution:** Cowork scheduled tasks only run when the Claude app is open and your computer is awake. They are not background daemons.
 
 ---
 
