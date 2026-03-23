@@ -108,17 +108,21 @@ In Advanced Options, set Project folder to this project's folder. Without it, ta
 
 1. Email Scan — Cadence: Daily (or Hourly if you want more frequent scanning)
    Description: "MEA Email Scan"
+   Model: Sonnet  ← needs to reliably follow the multi-step scan pipeline; calls Haiku internally for Tier 3
    Prompt: "Run the MEA email scan using the email-scanner skill."
 
 2. Daily Maintenance — Cadence: Daily
    Description: "MEA Daily Maintenance"
+   Model: Haiku  ← pure logic (date checks, overdue flags); fast and cheap
    Prompt: "Run the MEA daily maintenance task."
 
 3. Daily Briefing — Cadence: On weekdays (optional, or run /my-day manually)
    Description: "MEA Daily Briefing"
+   Model: Sonnet  ← synthesis and writing quality matters for a useful morning summary
    Prompt: "Run the MEA daily briefing using /my-day."
 
-To create each: click "Scheduled" in the Cowork sidebar → "+ New task" → fill in Description, then Prompt, set the cadence, then open Advanced Options and set the Project folder.
+To create each: click "Scheduled" in the Cowork sidebar → "+ New task" → fill in Description, then Prompt,
+set the cadence and model, then open Advanced Options and set the Project folder.
 ```
 
 > ⚠️ **Note on scan frequency:** Cowork's scheduler supports hourly, daily, weekly, on weekdays, or manual cadences. "4x/day" is not a native option. Use **hourly** for frequent scanning or **daily** for once-a-day. The `lastScanTimestamp` approach works correctly with any cadence.
