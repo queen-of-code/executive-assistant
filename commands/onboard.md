@@ -35,7 +35,7 @@ The onboard wizard solves the cold-start problem. Instead of requiring manual co
 ## Implementation guide
 
 ### Step 1 — Load config
-Read `task-data/mea-config.json`. Fail clearly if not found.
+Read `task-data/mea-config.json`. Fail clearly if not found — tell the user to run `/configure-mea` first.
 
 ### Step 2 — Domain question generation (Sonnet)
 Prompt:
@@ -142,5 +142,5 @@ Run /scan-now to classify any existing emails from this domain.
 | freelance, clients | Client names, invoice cycles, recurring deliverables |
 
 ## Requires
-- `/configure-mlea` run first
+- `/configure-mea` run first
 - GitHub MCP connector (to create initial issues)
