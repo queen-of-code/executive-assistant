@@ -1,6 +1,6 @@
 {
   "name": "moms-executive-assistant",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "MEA: A personal life task management system that unifies email, recurring schedules, and manual input into a single GitHub Projects board.",
   "private": true,
   "scripts": {

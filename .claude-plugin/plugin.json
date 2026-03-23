@@ -1,7 +1,7 @@
 {
   "name": "moms-executive-assistant",
   "displayName": "Mom's Executive Assistant",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Unify every source of 'things I need to do' into a single tracked backlog on GitHub Projects.",
   "author": {
     "name": "Melissa Benua"
