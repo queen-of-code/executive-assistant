@@ -1,10 +1,10 @@
-# Mother's Little Executive Assistant (MLEA)
+# Mom's Executive Assistant (MEA)
 
 ## Product Vision
 
-**Tagline:** *Your life has a thousand moving parts. MLEA tracks all of them.*
+**Tagline:** *Your life has a thousand moving parts. MEA tracks all of them.*
 
-MLEA is a life task management system built as a Claude Cowork/Claude Code plugin. It unifies every source of "things I need to do" — email inboxes, meeting notes, recurring schedules, and your own brain — into a single tracked backlog on GitHub Projects. You interact with it through three interfaces: Cowork (conversational), GitHub Projects (visual board), and Siri (voice). The intelligence layer classifies, prioritizes, and synthesizes. The code layer keeps it fast, cheap, and auditable.
+MEA is a life task management system built as a Claude Cowork/Claude Code plugin. It unifies every source of "things I need to do" — email inboxes, meeting notes, recurring schedules, and your own brain — into a single tracked backlog on GitHub Projects. You interact with it through three interfaces: Cowork (conversational), GitHub Projects (visual board), and Siri (voice). The intelligence layer classifies, prioritizes, and synthesizes. The code layer keeps it fast, cheap, and auditable.
 
 This isn't an email scanner with a task list bolted on. It's a personal operating system for busy people who juggle work, kids, home, and side projects — and need nothing to fall through the cracks.
 
@@ -23,7 +23,7 @@ This isn't an email scanner with a task list bolted on. It's a personal operatin
                          │          │           │
                          ▼          ▼           ▼
 ┌────────────────────────────────────────────────────────────┐
-│                     MLEA CORE ENGINE                        │
+│                     MEA CORE ENGINE                        │
 │                                                              │
 │  ┌────────────────────────────────────────────────────────┐  │
 │  │                 INPUT CHANNELS                          │  │
@@ -137,11 +137,11 @@ Tags are user-extensible. The `/onboard` wizard creates new tags as needed for e
 
 **Incremental Scanning (critical design):**
 
-The scanner never reads the entire inbox. It uses a `lastScanTimestamp` per mailbox (stored in `mlea-state.json`) to query only for emails that arrived since the last run. This keeps each scan fast and cheap regardless of inbox size.
+The scanner never reads the entire inbox. It uses a `lastScanTimestamp` per mailbox (stored in `mea-state.json`) to query only for emails that arrived since the last run. This keeps each scan fast and cheap regardless of inbox size.
 
 ```
 Regular run:
-  Read lastScanTimestamp for this mailbox from mlea-state.json
+  Read lastScanTimestamp for this mailbox from mea-state.json
   Query Gmail: "after:{lastScanTimestamp}" (only new emails)
   Process results → update lastScanTimestamp = now
 
@@ -310,7 +310,7 @@ Quick health check: last scan time, next scheduled scan, emails processed this p
 ## Plugin File Structure
 
 ```
-mothers-little-executive-assistant/
+moms-executive-assistant/
 ├── .claude-plugin/
 │   └── plugin.json                     # Plugin manifest
 ├── .mcp.json                           # MCP connector declarations
@@ -319,13 +319,13 @@ mothers-little-executive-assistant/
 │
 ├── commands/
 │   ├── scan-now.md                     # Trigger immediate email scan
-│   ├── configure-mlea.md              # Initial setup wizard
+│   ├── configure-mea.md              # Initial setup wizard
 │   ├── add-task.md                     # Manual task creation
 │   ├── done.md                         # Mark task complete
 │   ├── my-day.md                       # Daily briefing
 │   ├── onboard.md                      # Domain onboarding wizard
 │   ├── add-recurring.md                # Add a single recurring task
-│   ├── mlea-status.md                  # Status dashboard
+│   ├── mea-status.md                  # Status dashboard
 │   ├── view-tasks.md                   # Query/filter tasks
 │   └── weekly-review.md               # Guided weekly review
 │
@@ -371,8 +371,8 @@ mothers-little-executive-assistant/
 │   └── SETUP.md                        # How to install + configure
 │
 └── task-data/                          # Runtime state (persisted between runs)
-    ├── mlea-config.json               # User configuration
-    ├── mlea-state.json                # Runtime state + stats
+    ├── mea-config.json               # User configuration
+    ├── mea-state.json                # Runtime state + stats
     ├── processed-emails.json          # Email dedup ledger
     ├── created-issues.json            # Email→Issue mapping
     ├── recurring-tasks.json           # Recurring task schedules
@@ -386,7 +386,7 @@ mothers-little-executive-assistant/
 ```typescript
 // lib/types.ts — core types (abbreviated, full version in code)
 
-interface MLEAConfig {
+interface MEAConfig {
   version: string;
   userName: string;
   nameVariants: string[];               // For meeting note "assigned to me" matching
@@ -472,7 +472,7 @@ interface SchedulingConfig {
 
 ## The Onboard Wizard — How It Works
 
-The wizard is MLEA's answer to the cold-start problem. Rather than requiring users to manually configure keywords, patterns, and recurring tasks for every area of their life, the wizard interviews them and bootstraps the domain.
+The wizard is MEA's answer to the cold-start problem. Rather than requiring users to manually configure keywords, patterns, and recurring tasks for every area of their life, the wizard interviews them and bootstraps the domain.
 
 ### Example: `/onboard gardening`
 
@@ -620,7 +620,7 @@ Phase 1 implements this for GitHub. The interface is designed so future adapters
 
 ### How Cowork Scheduled Tasks Work
 
-MLEA runs on Cowork's scheduled tasks system. The following is based on Anthropic's published documentation (support.claude.com, March 2026).
+MEA runs on Cowork's scheduled tasks system. The following is based on Anthropic's published documentation (support.claude.com, March 2026).
 
 **Confirmed facts:**
 - Each scheduled task runs as its own independent Cowork session with access to connected MCP tools and plugins.
@@ -643,9 +643,9 @@ The answer depends on where Cowork writes those files:
 - If the scheduled task writes to a real local path (e.g., the project folder on disk) → files persist ✅
 - If the task runs in a VM sandbox and writes to a path inside that sandbox → files are deleted when the session ends ❌
 
-**Working hypothesis:** MLEA must be set up as a **Cowork Project** pointed at the repo directory. Cowork Projects have persistent local file storage and memory scoped to the project. Scheduled tasks created within a project should read/write the project's folder, which lives on disk outside the ephemeral session sandbox. This is the most plausible path to reliable `task-data/` persistence — but **it has not been verified with a working MLEA install**. This must be tested before treating the JSON state approach as validated.
+**Working hypothesis:** MEA must be set up as a **Cowork Project** pointed at the repo directory. Cowork Projects have persistent local file storage and memory scoped to the project. Scheduled tasks created within a project should read/write the project's folder, which lives on disk outside the ephemeral session sandbox. This is the most plausible path to reliable `task-data/` persistence — but **it has not been verified with a working MEA install**. This must be tested before treating the JSON state approach as validated.
 
-**Fallback if file persistence fails:** Move state to GitHub — write `mlea-state.json` as a file commit to the MLEA repo after each run, and read it via the GitHub API at the start of the next run. This is slower and uses more API calls but is guaranteed to work regardless of Cowork's local storage behavior.
+**Fallback if file persistence fails:** Move state to GitHub — write `mea-state.json` as a file commit to the MEA repo after each run, and read it via the GitHub API at the start of the next run. This is slower and uses more API calls but is guaranteed to work regardless of Cowork's local storage behavior.
 
 ### The "Computer Must Be On" Limitation
 
@@ -655,7 +655,7 @@ The answer depends on where Cowork writes those files:
 
 **⚠️ GUESSED:** The architecture doc previously claimed Cowork checks a 7-day window and fires the most-recently-missed run. **This level of detail is not in Anthropic's docs** and should be treated as an educated guess until tested.
 
-**Why this is still acceptable for MLEA:** The `lastScanTimestamp` approach is robust regardless of how many catch-up runs fire. If only one catch-up runs, it uses `lastScanTimestamp` from the last successful run and fetches everything since then — so no emails are lost, just delayed. The delay is typically hours (overnight) not days, since the laptop opens every morning.
+**Why this is still acceptable for MEA:** The `lastScanTimestamp` approach is robust regardless of how many catch-up runs fire. If only one catch-up runs, it uses `lastScanTimestamp` from the last successful run and fetches everything since then — so no emails are lost, just delayed. The delay is typically hours (overnight) not days, since the laptop opens every morning.
 
 **Typical scenario (based on confirmed behavior only):**
 ```
@@ -671,7 +671,7 @@ Monday 7am:  Laptop opens. Cowork reruns the skipped task.
 
 ### Scheduled Task Setup
 
-Cowork's scheduler uses plain-language cadences. MLEA requires three scheduled tasks, set up manually by the user via `/schedule` or the Scheduled sidebar in Cowork.
+Cowork's scheduler uses plain-language cadences. MEA requires three scheduled tasks, set up manually by the user via `/schedule` or the Scheduled sidebar in Cowork.
 
 **⚠️ UNKNOWN:** Whether a plugin's `/configure-mlea` command can programmatically create scheduled tasks on the user's behalf, or whether the user must create them manually. Anthropic's plugin/skill documentation does not describe a mechanism for plugins to register scheduled tasks. Assume **manual setup** until proven otherwise.
 
@@ -686,7 +686,7 @@ Cowork's scheduler uses plain-language cadences. MLEA requires three scheduled t
 
 The right answer depends on what cadences Cowork actually exposes in its UI. **Needs verification.**
 
-Self-contained prompt: reads config from `task-data/mlea-config.json`, reads `lastScanTimestamp` per mailbox from `mlea-state.json`, runs the email scan pipeline (fetch → dedup → classify → create issues), updates state files, reports a summary.
+Self-contained prompt: reads config from `task-data/mea-config.json`, reads `lastScanTimestamp` per mailbox from `mea-state.json`, runs the email scan pipeline (fetch → dedup → classify → create issues), updates state files, reports a summary.
 
 ### 2. Daily Maintenance
 
@@ -702,7 +702,7 @@ Generates and delivers the `/my-day` briefing. Also triggerable on demand via th
 
 ### Multi-Device Considerations
 
-If MLEA runs on multiple machines (e.g., MacBook and iMac), each has its own `mlea-state.json` and `processed-emails.json`. Both machines could scan the same emails. The dedup-against-GitHub-Issues layer prevents duplicate tasks. But it's wasteful.
+If MEA runs on multiple machines (e.g., MacBook and iMac), each has its own `mea-state.json` and `processed-emails.json`. Both machines could scan the same emails. The dedup-against-GitHub-Issues layer prevents duplicate tasks. But it's wasteful.
 
 **Recommendation:** Designate one machine as the scanner. Use other devices only for Cowork commands (`/my-day`, `/done`, `/add-task`) and the GitHub Projects board.
 
@@ -743,14 +743,14 @@ All persisted in `task-data/` as JSON. Human-readable, debuggable, no dependenci
 
 | File | Purpose | Growth Pattern |
 |------|---------|---------------|
-| `mlea-config.json` | User config (accounts, rules, tracker) | Updated by wizard/configure |
+| `mea-config.json` | User config (accounts, rules, tracker) | Updated by wizard/configure |
 | `tag-registry.json` | All known tags + metadata | Grows with `/onboard` |
 | `recurring-tasks.json` | Recurring task schedules | Grows with `/onboard` + `/add-recurring` |
-| `mlea-state.json` | Runtime state (last scan timestamps, stats, errors) | Overwritten each scan |
+| `mea-state.json` | Runtime state (last scan timestamps, stats, errors) | Overwritten each scan |
 | `processed-emails.json` | Email dedup ledger (append-only) | Grows ~40 entries/day, pruned monthly |
 | `created-issues.json` | Email→Issue ID mapping | Grows with issues created |
 
-### `mlea-state.json` Detail
+### `mea-state.json` Detail
 
 This is the most critical file for incremental scanning. It stores the high-water mark for each mailbox:
 
@@ -909,7 +909,7 @@ Three words: maintenance burden ratio. The intelligence layer (scanning, classif
 - LLM classification sees at most the first 500 characters of email body.
 - Meeting note extraction sees the full body but does not persist it — only the extracted action items.
 - OAuth for Gmail via MCP connector (no passwords in config).
-- GitHub API tokens live in MCP config / environment, not in MLEA config files.
+- GitHub API tokens live in MCP config / environment, not in MEA config files.
 - All state files are local to the user's machine (or Cowork session). Nothing is transmitted to third parties.
 - Siri Shortcuts use a GitHub personal access token stored in the Shortcut itself (user controls scope).
 

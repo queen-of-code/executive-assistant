@@ -4,8 +4,8 @@
       "command": "node",
       "args": ["${CLAUDE_PLUGIN_ROOT}/mcp/gmail-server/dist/index.js"],
       "env": {
-        "MLEA_TOKEN_DIR": "",
-        "MLEA_OAUTH_CLIENT": ""
+        "MEA_TOKEN_DIR": "",
+        "MEA_OAUTH_CLIENT": ""
       }
     }
   }

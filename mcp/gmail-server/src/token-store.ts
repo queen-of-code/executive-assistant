@@ -16,21 +16,21 @@ export interface OAuthClient {
   redirect_uris: string[];
 }
 
-// Resolves ~/.mlea/ respecting MLEA_TOKEN_DIR env override.
+// Resolves ~/.mea/ respecting MEA_TOKEN_DIR env override.
 // ${HOME} is NOT substituted in .mcp.json env values by Claude Code —
 // only ${CLAUDE_PLUGIN_ROOT} and ${CLAUDE_PLUGIN_DATA} are expanded there.
 // We resolve HOME ourselves here.
 export function getTokenDir(): string {
   return (
-    process.env["MLEA_TOKEN_DIR"] ??
-    path.join(os.homedir(), ".mlea", "tokens")
+    process.env["MEA_TOKEN_DIR"] ??
+    path.join(os.homedir(), ".mea", "tokens")
   );
 }
 
 export function getOAuthClientPath(): string {
   return (
-    process.env["MLEA_OAUTH_CLIENT"] ??
-    path.join(os.homedir(), ".mlea", "oauth-client.json")
+    process.env["MEA_OAUTH_CLIENT"] ??
+    path.join(os.homedir(), ".mea", "oauth-client.json")
   );
 }
 

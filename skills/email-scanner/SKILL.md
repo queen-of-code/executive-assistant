@@ -10,12 +10,12 @@ requires: []
 # Email Scanner Skill
 
 ## Purpose
-Guides execution of the MLEA email scan pipeline: Gmail fetch → dedup → 3-tier classify → GitHub Issue creation → state update. Supports multiple mailboxes and full 3-tier classification (Phase 2).
+Guides execution of the MEA email scan pipeline: Gmail fetch → dedup → 3-tier classify → GitHub Issue creation → state update. Supports multiple mailboxes and full 3-tier classification (Phase 2).
 
 ## Pipeline Steps
 
 ### 1. Load configuration
-Read `task-data/mlea-config.json` using `lib/config.ts` `loadConfig()`. Fail clearly if not found — the user needs to run `/configure-mlea` first.
+Read `task-data/mea-config.json` using `lib/config.ts` `loadConfig()`. Fail clearly if not found — the user needs to run `/configure-mlea` first.
 
 ### 2. For each configured mailbox
 
@@ -104,13 +104,13 @@ Errors: none
 ```
 
 ## Multi-account scanning
-Process `config.mailboxes` in order. Each mailbox has its own `lastScanTimestamp` in `mlea-state.json`. Errors in one mailbox do not prevent scanning others — catch per-mailbox and continue.
+Process `config.mailboxes` in order. Each mailbox has its own `lastScanTimestamp` in `mea-state.json`. Errors in one mailbox do not prevent scanning others — catch per-mailbox and continue.
 
 ## Security constraint
 Gmail access is read-only regardless of mode. In connector mode, the built-in connector uses `gmail.readonly` OAuth scope. In MCP mode, the bundled server uses the same `gmail.readonly` scope. This skill must never attempt to send, archive, modify, or delete emails. Any code path that writes to Gmail is a bug.
 
 ## Cost tracking
-Track which tier classified each email. The `tierBreakdown` stat in `mlea-state.json` surfaces this in `/mlea-status`. Tier 3 calls cost money; the breakdown lets the user see if their rules need tuning.
+Track which tier classified each email. The `tierBreakdown` stat in `mea-state.json` surfaces this in `/mlea-status`. Tier 3 calls cost money; the breakdown lets the user see if their rules need tuning.
 
 ## References
 - [Classification rules](references/classification-rules.md)

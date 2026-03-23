@@ -1,8 +1,8 @@
-# Mother's Little Executive Assistant (MLEA)
+# Mom's Executive Assistant (MEA)
 
-> *Your life has a thousand moving parts. MLEA tracks all of them.*
+> *Your life has a thousand moving parts. MEA tracks all of them.*
 
-MLEA is a personal life task management plugin for [Claude Cowork](https://claude.com/cowork). It scans your Gmail (read-only), processes meeting notes, handles manual input, and turns everything into tracked tasks on a GitHub Projects board — your existing one, not a new app.
+MEA is a personal life task management plugin for [Claude Cowork](https://claude.com/cowork). It scans your Gmail (read-only), processes meeting notes, handles manual input, and turns everything into tracked tasks on a GitHub Projects board — your existing one, not a new app.
 
 You interact with it through three interfaces:
 - **Cowork** (chat commands) — the primary interface for everything
@@ -29,10 +29,10 @@ See [`AGENTS.md`](AGENTS.md) for the full phase tracker and contributor guide.
 
 ## Prerequisites
 
-Before you can use MLEA, you need:
+Before you can use MEA, you need:
 
 1. **Claude Desktop** with a Pro, Max, Team, or Enterprise plan (required for Cowork and integrations)
-2. **A Gmail account** you want MLEA to scan
+2. **A Gmail account** you want MEA to scan
 3. **A GitHub account** with:
    - A repository to create issues in (can be private)
    - A [GitHub Projects board](https://docs.github.com/en/issues/planning-and-tracking-with-projects) associated with that repo (or your account)
@@ -49,30 +49,30 @@ git clone https://github.com/queen-of-code/executive-assistant
 cd executive-assistant
 ```
 
-This repo directory will become your MLEA workspace — all state files live here (in `task-data/`, which is `.gitignore`'d).
+This repo directory will become your MEA workspace — all state files live here (in `task-data/`, which is `.gitignore`'d).
 
 ### Step 2 — Create a Cowork Project pointed at this folder
 
-MLEA relies on state files (`task-data/mlea-state.json`, etc.) persisting between Cowork sessions. This requires running inside a **Cowork Project** — standalone Cowork sessions don't reliably persist local file writes.
+MEA relies on state files (`task-data/mea-state.json`, etc.) persisting between Cowork sessions. This requires running inside a **Cowork Project** — standalone Cowork sessions don't reliably persist local file writes.
 
 1. Open Claude Desktop → switch to the **Cowork** tab
 2. In the left sidebar, click **Projects** → **+**
 3. Choose **Use an existing folder**
 4. Select the `executive-assistant/` directory you cloned in Step 1
-5. Name it something like "MLEA" and click **Create**
+5. Name it something like "MEA" and click **Create**
 
-All MLEA tasks — setup, scans, briefings — should be run from inside this project.
+All MEA tasks — setup, scans, briefings — should be run from inside this project.
 
 ### Step 3 — Connect Gmail (read-only)
 
-MLEA reads your email but **never writes to it**. The Gmail connector is scoped to `gmail.readonly` — it cannot send, archive, delete, or modify any email. See [`CONNECTORS.md`](CONNECTORS.md) for the full list of what is and isn't accessed.
+MEA reads your email but **never writes to it**. The Gmail connector is scoped to `gmail.readonly` — it cannot send, archive, delete, or modify any email. See [`CONNECTORS.md`](CONNECTORS.md) for the full list of what is and isn't accessed.
 
 1. Open Claude Desktop → **Settings** → **Integrations**
 2. Click **Connect Gmail**
 3. Sign in with the Google account(s) you want to scan
 4. Authorize the read-only scope when prompted
 
-Repeat for each Gmail account you want MLEA to monitor.
+Repeat for each Gmail account you want MEA to monitor.
 
 ### Step 4 — Connect GitHub
 
@@ -86,7 +86,7 @@ export GITHUB_TOKEN=ghp_your_token_here
 ```
 The token needs `repo` scope (to create and read issues).
 
-### Step 5 — Install MLEA as a plugin
+### Step 5 — Install MEA as a plugin
 
 **Option A: Local install (development / personal use)**
 
@@ -94,7 +94,7 @@ Inside Cowork, run:
 
 ```
 /plugin marketplace add queen-of-code/executive-assistant
-/plugin install mothers-little-executive-assistant@queen-of-code
+/plugin install moms-executive-assistant@queen-of-code
 ```
 
 This adds the GitHub repo as a marketplace and installs the plugin from it.
@@ -111,14 +111,14 @@ Or inside an active Cowork session:
 
 ```
 /plugin marketplace add ./executive-assistant
-/plugin install mothers-little-executive-assistant@executive-assistant
+/plugin install moms-executive-assistant@executive-assistant
 ```
 
 > **Note:** Once the repo is public on GitHub, Option A is the cleanest path. For now (private repo), Option B works as long as you're authenticated.
 
 ### Step 6 — Run the setup wizard
 
-Inside your MLEA Cowork Project, run:
+Inside your MEA Cowork Project, run:
 
 ```
 /configure-mlea
@@ -129,19 +129,19 @@ This will ask you for:
 - The Gmail address(es) to scan
 - Your GitHub username, repo name, and Projects board number
 
-It writes `task-data/mlea-config.json` (`.gitignore`'d — never leaves your machine).
+It writes `task-data/mea-config.json` (`.gitignore`'d — never leaves your machine).
 
 ### Step 7 — Set up scheduled tasks
 
-Cowork's scheduler doesn't support cron — it uses plain-language cadences. You need to create three tasks manually inside your MLEA project.
+Cowork's scheduler doesn't support cron — it uses plain-language cadences. You need to create three tasks manually inside your MEA project.
 
-In your MLEA Cowork Project, click **Scheduled** in the sidebar → **+ New task** for each:
+In your MEA Cowork Project, click **Scheduled** in the sidebar → **+ New task** for each:
 
 | Task | Cadence | Prompt |
 |---|---|---|
-| MLEA Email Scan | Daily (or Hourly for more frequent scanning) | `Run the MLEA email scan using the email-scanner skill. Read config from task-data/mlea-config.json.` |
-| MLEA Daily Maintenance | Daily | `Run the MLEA daily maintenance task. Check for closed recurring issues, approaching due dates, and overdue items.` |
-| MLEA Daily Briefing | On weekdays *(optional — you can also just run `/my-day` manually)* | `Run /my-day to generate my daily task briefing.` |
+| MEA Email Scan | Daily (or Hourly for more frequent scanning) | `Run the MEA email scan using the email-scanner skill. Read config from task-data/mea-config.json.` |
+| MEA Daily Maintenance | Daily | `Run the MEA daily maintenance task. Check for closed recurring issues, approaching due dates, and overdue items.` |
+| MEA Daily Briefing | On weekdays *(optional — you can also just run `/my-day` manually)* | `Run /my-day to generate my daily task briefing.` |
 
 > **Note on scan frequency:** Cowork offers hourly or daily as the closest options to the ideal "a few times a day." Hourly is more responsive but uses more of your usage quota. Daily is conservative. Start with daily and adjust.
 
@@ -149,7 +149,7 @@ In your MLEA Cowork Project, click **Scheduled** in the sidebar → **+ New task
 
 ## Usage
 
-Once configured, MLEA's scheduled tasks handle email scanning, daily maintenance, and your morning briefing automatically. You can also trigger anything manually.
+Once configured, MEA's scheduled tasks handle email scanning, daily maintenance, and your morning briefing automatically. You can also trigger anything manually.
 
 ### Available commands
 
@@ -183,16 +183,16 @@ You can filter and sort the board by any of these. You can also just drag tasks 
 
 ## How email scanning works
 
-MLEA uses **incremental scanning** — it never reads your entire inbox. Each scan only looks at emails that arrived since the last run, using a high-water timestamp stored in `task-data/mlea-state.json`.
+MEA uses **incremental scanning** — it never reads your entire inbox. Each scan only looks at emails that arrived since the last run, using a high-water timestamp stored in `task-data/mea-state.json`.
 
 Classification is **rule-first, LLM-second**:
 - ~70% of emails are classified by regex rules (Tier 1 — fast, free, auditable)
 - ~15% are classified by structural signals (Tier 2 — calendar invites, VIP senders, date in subject)
 - The remaining ~15% use Haiku for lightweight LLM classification (Tier 3)
 
-Email bodies are never stored. MLEA reads subject, sender, date, and a short snippet only.
+Email bodies are never stored. MEA reads subject, sender, date, and a short snippet only.
 
-**If your laptop is closed**, scans are missed but nothing is lost. When Claude Desktop reopens, Cowork reruns the skipped task automatically. Because MLEA uses `lastScanTimestamp`, the catch-up run fetches everything since the last successful scan in one batch.
+**If your laptop is closed**, scans are missed but nothing is lost. When Claude Desktop reopens, Cowork reruns the skipped task automatically. Because MEA uses `lastScanTimestamp`, the catch-up run fetches everything since the last successful scan in one batch.
 
 ---
 
@@ -202,7 +202,7 @@ Email bodies are never stored. MLEA reads subject, sender, date, and a short sni
 - LLM classification sees at most the first 500 characters of an email snippet (Tier 3 only)
 - All state files stay on your local machine (`task-data/`)
 - Nothing is transmitted to third parties beyond what the Gmail and GitHub API calls require
-- OAuth for Gmail uses `gmail.readonly` scope — MLEA has no write access to your email
+- OAuth for Gmail uses `gmail.readonly` scope — MEA has no write access to your email
 
 See [`CONNECTORS.md`](CONNECTORS.md) for the full breakdown of what each connector can and cannot do.
 
@@ -219,12 +219,12 @@ See [`CONNECTORS.md`](CONNECTORS.md) for the full breakdown of what each connect
 ├── CONNECTORS.md                What each connector can/cannot do
 │
 ├── commands/                    Slash command definitions (Cowork reads these)
-│   ├── configure-mlea.md
+│   ├── configure-mea.md
 │   ├── scan-now.md
 │   ├── add-task.md
 │   ├── done.md
 │   ├── my-day.md
-│   ├── mlea-status.md
+│   ├── mea-status.md
 │   ├── onboard.md
 │   ├── add-recurring.md
 │   └── daily-maintenance.md
@@ -246,7 +246,7 @@ See [`CONNECTORS.md`](CONNECTORS.md) for the full breakdown of what each connect
 │   └── onboard-wizard/SKILL.md
 │
 └── task-data/                   Runtime state (local only, .gitignore'd)
-    ├── mlea-config.template.json  Starter template — copy to mlea-config.json
+    ├── mea-config.template.json  Starter template — copy to mea-config.json
     └── README.md
 ```
 

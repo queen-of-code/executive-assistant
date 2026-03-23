@@ -11,7 +11,7 @@ import {
 import { listAccounts } from "./token-store.js";
 
 const server = new McpServer({
-  name: "mlea-gmail",
+  name: "mea-gmail",
   version: "0.1.0",
 });
 
@@ -35,7 +35,7 @@ server.registerTool(
   "gmail_list_accounts",
   {
     description:
-      "Returns the list of Gmail accounts that have been authenticated with MLEA. " +
+      "Returns the list of Gmail accounts that have been authenticated with MEA. " +
       "Returns an empty list if no accounts have been set up (connector mode or MCP not yet configured). " +
       "Use this to confirm which accounts are available before calling gmail_search.",
     inputSchema: {},
@@ -183,6 +183,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((e) => {
-  process.stderr.write(`Fatal error starting mlea-gmail MCP server: ${e}\n`);
+  process.stderr.write(`Fatal error starting mea-gmail MCP server: ${e}\n`);
   process.exit(1);
 });

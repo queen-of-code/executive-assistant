@@ -9,7 +9,7 @@
 
 ## Problem
 
-The built-in Claude Gmail connector supports exactly one account. MLEA needs to scan
+The built-in Claude Gmail connector supports exactly one account. MEA needs to scan
 three inboxes. Anthropic has no near-term plan to support multiple OAuth accounts in
 a single connector instance (open issue: anthropics/claude-code#34834).
 
@@ -17,20 +17,20 @@ a single connector instance (open issue: anthropics/claude-code#34834).
 
 ## Solution Overview
 
-Ship a local stdio MCP server (`mcp/gmail-server/`) inside the MLEA repo that manages
+Ship a local stdio MCP server (`mcp/gmail-server/`) inside the MEA repo that manages
 OAuth tokens for N Gmail accounts and exposes read-only tools to Claude. The built-in
 connector becomes optional — users with a single inbox can still use the simpler flow.
 
 ### Gmail mode selector
 
-`mlea-config.json` gains a `gmailMode` field:
+`mea-config.json` gains a `gmailMode` field:
 
 ```json
 "gmailMode": "connector"   // default — uses built-in Claude Gmail connector (1 account)
 "gmailMode": "mcp"         // uses the bundled MCP server (N accounts, requires GCP setup)
 ```
 
-`/configure-mlea` asks during first-time setup:
+`/configure-mea` asks during first-time setup:
 
 > "How many Gmail accounts do you want to scan?  
 > [1] Just one — use the simple built-in connector (no GCP required)  
@@ -43,18 +43,18 @@ The email scanner skill reads `gmailMode` and uses the appropriate tool call syn
 ## Architecture
 
 ```
-~/.mlea/
+~/.mea/
   oauth-client.json          ← GCP OAuth Desktop App credentials (never committed)
   tokens/
     melissa@queenofcode.dev.json   ← per-account refresh token
     melissa@govega.ai.json
     mbenua@gmail.com.json
 
-mcp/gmail-server/            ← lives in the MLEA repo, optional component
+mcp/gmail-server/            ← lives in the MEA repo, optional component
   src/
     index.ts                 ← MCP server entry point (stdio transport)
     gmail-client.ts          ← Gmail API wrapper (per-account)
-    token-store.ts           ← reads/writes ~/.mlea/tokens/
+    token-store.ts           ← reads/writes ~/.mea/tokens/
     auth.ts                  ← one-time OAuth2 browser flow per account
   package.json
   tsconfig.json
@@ -70,8 +70,8 @@ mcp/gmail-server/            ← lives in the MLEA repo, optional component
       "command": "node",
       "args": ["${CLAUDE_PLUGIN_ROOT}/mcp/gmail-server/dist/index.js"],
       "env": {
-        "MLEA_TOKEN_DIR": "${HOME}/.mlea/tokens",
-        "MLEA_OAUTH_CLIENT": "${HOME}/.mlea/oauth-client.json"
+        "MEA_TOKEN_DIR": "${HOME}/.mea/tokens",
+        "MEA_OAUTH_CLIENT": "${HOME}/.mea/oauth-client.json"
       }
     }
   }
@@ -140,13 +140,13 @@ The GCP consent screen will request: `https://www.googleapis.com/auth/gmail.read
 2. **APIs & Services → Library** → search "Gmail API" → Enable
 3. **APIs & Services → OAuth consent screen**
    - User type: External
-   - App name: "MLEA Gmail"
+   - App name: "MEA Gmail"
    - Scopes: `gmail.readonly`
    - Test users: add all accounts you want to scan
 4. **APIs & Services → Credentials → Create Credentials → OAuth client ID**
    - Application type: Desktop app
    - Download the JSON file
-5. Save the downloaded JSON as `~/.mlea/oauth-client.json`
+5. Save the downloaded JSON as `~/.mea/oauth-client.json`
 
 Then run the auth flow once per account:
 
@@ -158,18 +158,18 @@ npm run auth -- --account melissa@govega.ai
 npm run auth -- --account mbenua@gmail.com
 ```
 
-Each command opens a browser tab. Approve → token saved to `~/.mlea/tokens/`.
+Each command opens a browser tab. Approve → token saved to `~/.mea/tokens/`.
 
 ---
 
-## Changes to existing MLEA files
+## Changes to existing MEA files
 
 | File | Change |
 |---|---|
-| `lib/types.ts` | Add `gmailMode: "connector" \| "mcp"` to `MLEAConfig` |
+| `lib/types.ts` | Add `gmailMode: "connector" \| "mcp"` to `MEAConfig` |
 | `lib/config.ts` | Default `gmailMode` to `"connector"` |
 | `.mcp.json` | Replace connector declaration with MCP server subprocess config |
-| `commands/configure-mlea.md` | Add gmailMode selection step to setup wizard |
+| `commands/configure-mea.md` | Add gmailMode selection step to setup wizard |
 | `skills/email-scanner/SKILL.md` | Branch on `gmailMode` — use connector tools or `gmail_search` |
 | `commands/scan-now.md` | Same branching |
 | `CONNECTORS.md` | Document both modes |
@@ -182,7 +182,7 @@ Each command opens a browser tab. Approve → token saved to `~/.mlea/tokens/`.
 ### Phase A — Server scaffold + single MCP account (unblocks your scanning)
 
 - [ ] `mcp/gmail-server/` scaffolded: `package.json`, `tsconfig.json`, `src/index.ts`
-- [ ] `token-store.ts` — read/write `~/.mlea/tokens/`
+- [ ] `token-store.ts` — read/write `~/.mea/tokens/`
 - [ ] `auth.ts` — one-time OAuth2 browser flow CLI
 - [ ] `gmail-client.ts` — Gmail API wrapper, `gmail_search` + `gmail_list_accounts`
 - [ ] `.mcp.json` updated to launch the server
@@ -194,23 +194,23 @@ Each command opens a browser tab. Approve → token saved to `~/.mlea/tokens/`.
 
 - [ ] `gmail_get_message` + `gmail_list_unread` implemented
 - [ ] Auth flow tested for all 3 accounts
-- [ ] `commands/configure-mlea.md` — gmailMode selection step
+- [ ] `commands/configure-mea.md` — gmailMode selection step
 - [ ] `commands/scan-now.md` updated
 - [ ] `CONNECTORS.md` updated
 
 ### Phase C — Single-account connector mode preserved
 
-- [ ] `/configure-mlea` routes to connector setup if user picks option 1
+- [ ] `/configure-mea` routes to connector setup if user picks option 1
 - [ ] Email scanner works correctly in both modes
 - [ ] `README.md` Step 3 updated with both paths documented
-- [ ] `mlea-status` reports which mode is active + per-account token health in MCP mode
+- [ ] `mea-status` reports which mode is active + per-account token health in MCP mode
 
 ### Phase D — Hardening
 
 - [ ] Automatic token refresh on expiry
 - [ ] Graceful error if token missing for a configured account
 - [ ] `npm run build` + tests for `mcp/gmail-server/`
-- [ ] `.gitignore` entries for `~/.mlea/` paths confirmed
+- [ ] `.gitignore` entries for `~/.mea/` paths confirmed
 
 ---
 
@@ -228,7 +228,7 @@ Each command opens a browser tab. Approve → token saved to `~/.mlea/tokens/`.
 | Question | Status |
 |---|---|
 | Does Claude Code's `.mcp.json` support `${HOME}` expansion in env values? | ✅ Resolved — NO. Only `${CLAUDE_PLUGIN_ROOT}` and `${CLAUDE_PLUGIN_DATA}` are substituted. `token-store.ts` resolves `os.homedir()` directly in code instead. |
-| Token storage in `${CLAUDE_PLUGIN_DATA}` vs `~/.mlea/`? | ✅ Decided — `~/.mlea/` so tokens survive plugin reinstalls, updates, and uninstalls. |
+| Token storage in `${CLAUDE_PLUGIN_DATA}` vs `~/.mea/`? | ✅ Decided — `~/.mea/` so tokens survive plugin reinstalls, updates, and uninstalls. |
 | Is `gmail.readonly` scope sufficient for `gmail_get_message` (full headers)? | ✅ Yes — readonly covers full message metadata read. |
 
 ---

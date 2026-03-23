@@ -1,7 +1,7 @@
-# MLEA Gmail MCP Server
+# MEA Gmail MCP Server
 
-A local stdio MCP server that gives MLEA read-only access to multiple Gmail accounts.
-Required only when `gmailMode: "mcp"` is set in your MLEA config (i.e. you have more
+A local stdio MCP server that gives MEA read-only access to multiple Gmail accounts.
+Required only when `gmailMode: "mcp"` is set in your MEA config (i.e. you have more
 than one Gmail account to scan). Single-account users use the built-in Claude connector
 and can ignore this directory entirely.
 
@@ -21,15 +21,15 @@ and can ignore this directory entirely.
 2. **APIs & Services → Library** → search "Gmail API" → **Enable**
 3. **APIs & Services → OAuth consent screen**
    - User type: **External**
-   - App name: anything (e.g. "MLEA Gmail")
+   - App name: anything (e.g. "MEA Gmail")
    - Scopes: add `https://www.googleapis.com/auth/gmail.readonly`
    - Test users: add every Gmail address you want to scan
 4. **APIs & Services → Credentials → Create Credentials → OAuth client ID**
    - Application type: **Desktop app**
    - Click **Create** → **Download JSON**
-5. Save the downloaded file to `~/.mlea/oauth-client.json`
+5. Save the downloaded file to `~/.mea/oauth-client.json`
 
-The directory `~/.mlea/` is created automatically when you run the auth flow.
+The directory `~/.mea/` is created automatically when you run the auth flow.
 
 ---
 
@@ -48,7 +48,7 @@ npm run auth -- --account mbenua@gmail.com
 ```
 
 Each command opens a browser tab. Sign in with the matching Google account and click
-**Allow**. The refresh token is saved to `~/.mlea/tokens/{account}.json`.
+**Allow**. The refresh token is saved to `~/.mea/tokens/{account}.json`.
 
 **If no refresh token is returned:** Go to
 [myaccount.google.com/permissions](https://myaccount.google.com/permissions), revoke
@@ -56,9 +56,9 @@ access for your app, then run `npm run auth` again.
 
 ---
 
-## Updating your MLEA config
+## Updating your MEA config
 
-In `task-data/mlea-config.json`, set:
+In `task-data/mea-config.json`, set:
 
 ```json
 "gmailMode": "mcp"
@@ -90,8 +90,8 @@ Run `npm run auth -- --account your@email.com` first.
 
 ## Token storage
 
-Tokens are stored at `~/.mlea/tokens/`. They are:
-- **Never committed** — `~/.mlea/` is outside the repo entirely
+Tokens are stored at `~/.mea/tokens/`. They are:
+- **Never committed** — `~/.mea/` is outside the repo entirely
 - **Automatically refreshed** — the server refreshes expired access tokens on first use
   and writes the updated token back to disk
 
@@ -105,7 +105,7 @@ Tokens are stored at `~/.mlea/tokens/`. They are:
 | Token exists but account not in config | Account is ignored by the scan — only `mailboxes` entries are scanned |
 | Token expired, refresh succeeds | Transparent — user sees nothing |
 | Token expired, refresh fails | Error message includes the account name and a link to re-auth |
-| `~/.mlea/oauth-client.json` missing | Server starts but every tool call returns a clear setup error |
+| `~/.mea/oauth-client.json` missing | Server starts but every tool call returns a clear setup error |
 
 ---
 
@@ -116,7 +116,7 @@ mcp/gmail-server/
 ├── src/
 │   ├── index.ts          MCP server entry point (stdio transport, 4 tools)
 │   ├── gmail-client.ts   Gmail API wrapper — search, get, list_unread
-│   ├── token-store.ts    Read/write ~/.mlea/tokens/, load OAuth client creds
+│   ├── token-store.ts    Read/write ~/.mea/tokens/, load OAuth client creds
 │   └── auth.ts           One-time OAuth2 browser flow CLI
 ├── dist/                 Compiled output (gitignored)
 ├── package.json

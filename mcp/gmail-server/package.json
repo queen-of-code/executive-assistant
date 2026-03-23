@@ -1,7 +1,7 @@
 {
-  "name": "mlea-gmail-mcp",
+  "name": "mea-gmail-mcp",
   "version": "0.1.0",
-  "description": "Multi-account Gmail MCP server for MLEA",
+  "description": "Multi-account Gmail MCP server for MEA",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {

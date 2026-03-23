@@ -3,7 +3,7 @@
  * One-time OAuth2 authentication flow for a single Gmail account.
  * Run: npm run auth -- --account melissa@queenofcode.dev
  *
- * Opens a browser for consent, stores the refresh token in ~/.mlea/tokens/.
+ * Opens a browser for consent, stores the refresh token in ~/.mea/tokens/.
  */
 import * as http from "http";
 import * as readline from "readline";
